@@ -39,7 +39,11 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": {}
-    }
+      "router": {},
+      "eas": {
+        "projectId": "a263a602-80e4-4016-80a7-50cbd09c1ead"
+      }
+    },
+    "owner": "bigunit"
   }
 }
