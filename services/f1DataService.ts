@@ -1,0 +1,213 @@
+// F1 Data Service for fetching data from jolpica-f1 API
+export interface Driver {
+  position: number;
+  name: string;
+  team: string;
+  points: number;
+  wins: number;
+  driverId?: string;
+  nationality?: string;
+}
+
+export interface Constructor {
+  position: number;
+  name: string;
+  points: number;
+  wins: number;
+  constructorId?: string;
+  nationality?: string;
+}
+
+export interface Race {
+  id: number;
+  name: string;
+  location: string;
+  country: string;
+  date: string;
+  status: 'completed' | 'upcoming' | 'live';
+  winner?: string;
+  round?: number;
+  circuit?: string;
+}
+
+export interface Season {
+  year: number;
+  label: string;
+}
+
+// Available seasons from 1950 to current year
+export const getAvailableSeasons = (): Season[] => {
+  const currentYear = new Date().getFullYear();
+  const seasons: Season[] = [];
+  
+  for (let year = currentYear; year >= 1950; year--) {
+    seasons.push({
+      year,
+      label: `${year} Season`
+    });
+  }
+  
+  return seasons;
+};
+
+// Base URL for jolpica-f1 API
+const BASE_URL = 'https://api.jolpi.ca/ergast/f1';
+
+export class F1DataService {
+  private static instance: F1DataService;
+  
+  public static getInstance(): F1DataService {
+    if (!F1DataService.instance) {
+      F1DataService.instance = new F1DataService();
+    }
+    return F1DataService.instance;
+  }
+
+  async fetchDriverStandings(season: number): Promise<Driver[]> {
+    try {
+      console.log(`Fetching driver standings for season ${season}`);
+      const response = await fetch(`${BASE_URL}/${season}/driverStandings.json`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const standings = data.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings || [];
+      
+      return standings.map((standing: any, index: number) => ({
+        position: parseInt(standing.position) || index + 1,
+        name: `${standing.Driver?.givenName || ''} ${standing.Driver?.familyName || ''}`.trim(),
+        team: standing.Constructors?.[0]?.name || 'Unknown Team',
+        points: parseInt(standing.points) || 0,
+        wins: parseInt(standing.wins) || 0,
+        driverId: standing.Driver?.driverId,
+        nationality: standing.Driver?.nationality
+      }));
+    } catch (error) {
+      console.error('Error fetching driver standings:', error);
+      return this.getFallbackDriverStandings();
+    }
+  }
+
+  async fetchConstructorStandings(season: number): Promise<Constructor[]> {
+    try {
+      console.log(`Fetching constructor standings for season ${season}`);
+      const response = await fetch(`${BASE_URL}/${season}/constructorStandings.json`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const standings = data.MRData?.StandingsTable?.StandingsLists?.[0]?.ConstructorStandings || [];
+      
+      return standings.map((standing: any, index: number) => ({
+        position: parseInt(standing.position) || index + 1,
+        name: standing.Constructor?.name || 'Unknown Constructor',
+        points: parseInt(standing.points) || 0,
+        wins: parseInt(standing.wins) || 0,
+        constructorId: standing.Constructor?.constructorId,
+        nationality: standing.Constructor?.nationality
+      }));
+    } catch (error) {
+      console.error('Error fetching constructor standings:', error);
+      return this.getFallbackConstructorStandings();
+    }
+  }
+
+  async fetchRaceCalendar(season: number): Promise<Race[]> {
+    try {
+      console.log(`Fetching race calendar for season ${season}`);
+      const response = await fetch(`${BASE_URL}/${season}.json`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const races = data.MRData?.RaceTable?.Races || [];
+      
+      return races.map((race: any, index: number) => {
+        const raceDate = new Date(race.date);
+        const now = new Date();
+        const status = raceDate < now ? 'completed' : 'upcoming';
+        
+        return {
+          id: index + 1,
+          name: race.raceName || 'Unknown Race',
+          location: race.Circuit?.circuitName || 'Unknown Circuit',
+          country: race.Circuit?.Location?.country || 'Unknown Country',
+          date: race.date || '',
+          status,
+          round: parseInt(race.round) || index + 1,
+          circuit: race.Circuit?.circuitId
+        };
+      });
+    } catch (error) {
+      console.error('Error fetching race calendar:', error);
+      return this.getFallbackRaceCalendar();
+    }
+  }
+
+  async fetchRaceResults(season: number, round: number): Promise<any> {
+    try {
+      console.log(`Fetching race results for season ${season}, round ${round}`);
+      const response = await fetch(`${BASE_URL}/${season}/${round}/results.json`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const results = data.MRData?.RaceTable?.Races?.[0]?.Results || [];
+      
+      return results.length > 0 ? results[0] : null;
+    } catch (error) {
+      console.error('Error fetching race results:', error);
+      return null;
+    }
+  }
+
+  // Fallback data for when API is unavailable
+  private getFallbackDriverStandings(): Driver[] {
+    return [
+      { position: 1, name: 'Max Verstappen', team: 'Red Bull Racing', points: 575, wins: 19 },
+      { position: 2, name: 'Sergio Perez', team: 'Red Bull Racing', points: 285, wins: 2 },
+      { position: 3, name: 'Lewis Hamilton', team: 'Mercedes', points: 234, wins: 1 },
+      { position: 4, name: 'Fernando Alonso', team: 'Aston Martin', points: 206, wins: 0 },
+      { position: 5, name: 'Charles Leclerc', team: 'Ferrari', points: 206, wins: 1 },
+    ];
+  }
+
+  private getFallbackConstructorStandings(): Constructor[] {
+    return [
+      { position: 1, name: 'Red Bull Racing', points: 860, wins: 21 },
+      { position: 2, name: 'Mercedes', points: 409, wins: 1 },
+      { position: 3, name: 'Ferrari', points: 406, wins: 2 },
+      { position: 4, name: 'Aston Martin', points: 280, wins: 0 },
+      { position: 5, name: 'McLaren', points: 212, wins: 0 },
+    ];
+  }
+
+  private getFallbackRaceCalendar(): Race[] {
+    return [
+      {
+        id: 1,
+        name: 'Bahrain Grand Prix',
+        location: 'Bahrain International Circuit',
+        country: 'Bahrain',
+        date: 'March 5, 2024',
+        status: 'completed',
+      },
+      {
+        id: 2,
+        name: 'Abu Dhabi Grand Prix',
+        location: 'Yas Marina Circuit',
+        country: 'United Arab Emirates',
+        date: 'December 8, 2024',
+        status: 'upcoming',
+      },
+    ];
+  }
+}
