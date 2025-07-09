@@ -105,7 +105,7 @@ export default function HomeScreen() {
       <View style={commonStyles.header}>
         <Text style={commonStyles.headerTitle}>F1 Dashboard</Text>
       </View>
-      
+
       <View style={commonStyles.content}>
         <SeasonSelector
           selectedSeason={selectedSeason}

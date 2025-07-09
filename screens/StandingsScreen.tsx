@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { commonStyles, colors } from '../styles/commonStyles';
 import SeasonSelector from '../components/SeasonSelector';
 import { F1DataService, Driver, Constructor } from '../services/f1DataService';
+import { Trophy, Medal, Users, User } from 'lucide-react-native';
+
 
 export default function StandingsScreen() {
   const [activeTab, setActiveTab] = useState<'drivers' | 'constructors'>('drivers');
@@ -49,6 +51,36 @@ export default function StandingsScreen() {
     return colors.text;
   };
 
+  const getRankStyles = (position: number) => {
+  switch (position) {
+    case 1:
+      return {
+        backgroundColor: '#1e1b13',
+        borderColor: '#a58f43',
+        textColor: '#facc15'
+      };
+    case 2:
+      return {
+        backgroundColor: '#1c1d21',
+        borderColor: '#4b5563',
+        textColor: '#ffffff'
+      };
+    case 3:
+      return {
+        backgroundColor: '#1b1512',
+        borderColor: '#7c3f10',
+        textColor: '#f97316'
+      };
+    default:
+      return {
+        backgroundColor: colors.card,
+        borderColor: 'transparent',
+        textColor: colors.text
+      };
+  }
+};
+
+
   return (
     <View style={commonStyles.container}>
       <View style={commonStyles.header}>
@@ -63,50 +95,75 @@ export default function StandingsScreen() {
 
         {/* Tab Selector */}
         <View style={[commonStyles.row, { paddingVertical: 16 }]}>
+<TouchableOpacity
+  style={[
+    commonStyles.card,
+    {
+      flex: 1,
+      marginRight: 8,
+      backgroundColor: activeTab === 'drivers' ? colors.primary : colors.card,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 12,
+    },
+  ]}
+  onPress={() => setActiveTab('drivers')}
+>
+  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+    <User
+      size={16}
+      color={activeTab === 'drivers' ? colors.accent : colors.text}
+      style={{ marginRight: 6 }}
+    />
+    <Text
+      style={[
+        commonStyles.text,
+        {
+          fontWeight: '600',
+          fontFamily: 'JetBrainsMono-Regular',
+          color: activeTab === 'drivers' ? colors.accent : colors.text,
+        },
+      ]}
+    >
+      Drivers
+    </Text>
+  </View>
+</TouchableOpacity>
+
           <TouchableOpacity
-            style={[
-              commonStyles.card,
-              { 
-                flex: 1, 
-                marginRight: 8, 
-                backgroundColor: activeTab === 'drivers' ? colors.primary : colors.card 
-              }
-            ]}
-            onPress={() => setActiveTab('drivers')}
-          >
-            <Text style={[
-              commonStyles.text, 
-              { 
-                textAlign: 'center', 
-                fontWeight: '600',
-                color: activeTab === 'drivers' ? colors.accent : colors.text 
-              }
-            ]}>
-              Drivers
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              commonStyles.card,
-              { 
-                flex: 1, 
-                marginLeft: 8, 
-                backgroundColor: activeTab === 'constructors' ? colors.primary : colors.card 
-              }
-            ]}
-            onPress={() => setActiveTab('constructors')}
-          >
-            <Text style={[
-              commonStyles.text, 
-              { 
-                textAlign: 'center', 
-                fontWeight: '600',
-                color: activeTab === 'constructors' ? colors.accent : colors.text 
-              }
-            ]}>
-              Constructors
-            </Text>
-          </TouchableOpacity>
+  style={[
+    commonStyles.card,
+    {
+      flex: 1,
+      marginLeft: 8,
+      backgroundColor: activeTab === 'constructors' ? colors.primary : colors.card,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 12,
+    },
+  ]}
+  onPress={() => setActiveTab('constructors')}
+>
+  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+    <Users
+      size={16}
+      color={activeTab === 'constructors' ? colors.accent : colors.text}
+      style={{ marginRight: 6 }}
+    />
+    <Text
+      style={[
+        commonStyles.text,
+        {
+          fontWeight: '600',
+          fontFamily: 'JetBrainsMono-Regular',
+          color: activeTab === 'constructors' ? colors.accent : colors.text,
+        },
+      ]}
+    >
+      Constructors
+    </Text>
+  </View>
+</TouchableOpacity>
         </View>
 
         {loading ? (
@@ -127,40 +184,77 @@ export default function StandingsScreen() {
                     </Text>
                   </View>
                 ) : (
-                  driverStandings.map((driver) => (
-                    <View key={`${driver.position}-${driver.name}`} style={commonStyles.card}>
+                  driverStandings.map((driver) => {
+                  const { backgroundColor, borderColor, textColor } = getRankStyles(driver.position);
+
+                  return (
+                    <View
+                      key={`${driver.position}-${driver.name}`}
+                      style={[
+                        commonStyles.card,
+                        {
+                          backgroundColor,
+                          borderColor,
+                          borderWidth: driver.position <= 3 ? 1 : 0,
+                        }
+                      ]}
+                    >
                       <View style={commonStyles.row}>
                         <View style={[commonStyles.centerContent, { width: 40 }]}>
-                          <Text style={[
-                            commonStyles.title, 
-                            { 
-                              fontSize: 20, 
-                              color: getPositionColor(driver.position) 
-                            }
-                          ]}>
+                          <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 16, color: textColor }}>
                             {driver.position}
                           </Text>
                         </View>
-                        <View style={{ flex: 1, marginLeft: 16 }}>
-                          <Text style={[commonStyles.text, { fontWeight: '600' }]}>
+
+                        <View style={{ flex: 1, marginLeft: 1 }}>
+                          <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 14, color: textColor }}>
                             {driver.name}
                           </Text>
-                          <Text style={commonStyles.textSecondary}>
+                          <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 12, color: textColor }}>
                             {driver.team}
                           </Text>
                         </View>
-                        <View style={commonStyles.centerContent}>
-                          <Text style={[commonStyles.text, { fontWeight: '600' }]}>
-                            {driver.points}
-                          </Text>
-                          <Text style={[commonStyles.textSecondary, { fontSize: 12 }]}>
-                            {driver.wins} wins
-                          </Text>
+
+                        <View style={[commonStyles.centerContent, { flexDirection: 'row', gap: 20 }]}>
+                          {/* Points */}
+                          <View style={{ alignItems: 'center', marginRight: 1 }}>
+                            <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 16, color: textColor }}>
+                              {driver.points}
+                            </Text>
+                            <Text style={[commonStyles.textSecondary, { fontSize: 10 }]}>PTS</Text>
+                          </View>
+
+                          {/* Wins */}
+                          <View style={{ alignItems: 'center', marginRight: -10 }}>
+                            <Text style={[commonStyles.text, { fontWeight: '600', fontSize: 16, color: textColor }]}>
+                              {driver.wins}
+                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                              <Trophy size={12} color="#facc15" />
+                              <Text style={[commonStyles.textSecondary, { fontSize: 10, marginLeft: 4 }]}>
+                                WINS
+                              </Text>
+                            </View>
+                          </View>
+
+                          {/* Podiums */}
+                          <View style={{ alignItems: 'center' }}>
+                            <Text style={[commonStyles.text, { fontWeight: '600', fontSize: 16, color: textColor }]}>
+                              {driver.podiums}
+                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                              <Medal size={12} color="#d97706" />
+                              <Text style={[commonStyles.textSecondary, { fontSize: 10, marginLeft: 4 }]}>
+                                PODIUMS
+                              </Text>
+                            </View>
+                          </View>
                         </View>
                       </View>
                     </View>
-                  ))
-                )}
+                  );
+                }))
+                }
               </View>
             ) : (
               <View style={commonStyles.section}>
@@ -171,36 +265,52 @@ export default function StandingsScreen() {
                     </Text>
                   </View>
                 ) : (
-                  constructorStandings.map((constructor) => (
-                    <View key={`${constructor.position}-${constructor.name}`} style={commonStyles.card}>
+                  constructorStandings.map((constructor) => {
+                  const { backgroundColor, borderColor, textColor } = getRankStyles(constructor.position);
+
+                  return (
+                    <View
+                      key={`${constructor.position}-${constructor.name}`}
+                      style={[
+                        commonStyles.card,
+                        {
+                          backgroundColor,
+                          borderColor,
+                          borderWidth: constructor.position <= 3 ? 1 : 0,
+                        }
+                      ]}
+                    >
                       <View style={commonStyles.row}>
                         <View style={[commonStyles.centerContent, { width: 40 }]}>
                           <Text style={[
-                            commonStyles.title, 
-                            { 
-                              fontSize: 20, 
-                              color: getPositionColor(constructor.position) 
+                            commonStyles.title,
+                            {
+                              fontSize: 20,
+                              color: textColor,
                             }
                           ]}>
                             {constructor.position}
                           </Text>
                         </View>
+
                         <View style={{ flex: 1, marginLeft: 16 }}>
-                          <Text style={[commonStyles.text, { fontWeight: '600' }]}>
+                          <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 14, color: textColor }}>
                             {constructor.name}
                           </Text>
                         </View>
+
                         <View style={commonStyles.centerContent}>
-                          <Text style={[commonStyles.text, { fontWeight: '600' }]}>
+                          <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 14, color: textColor }}>
                             {constructor.points}
                           </Text>
-                          <Text style={[commonStyles.textSecondary, { fontSize: 12 }]}>
+                          <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 14, color: textColor }}>
                             {constructor.wins} wins
                           </Text>
                         </View>
                       </View>
                     </View>
-                  ))
+                  );
+                })
                 )}
               </View>
             )}

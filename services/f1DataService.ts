@@ -5,6 +5,7 @@ export interface Driver {
   team: string;
   points: number;
   wins: number;
+	podiums: number;
   driverId?: string;
   nationality?: string;
 }
@@ -63,6 +64,32 @@ export class F1DataService {
     return F1DataService.instance;
   }
 
+	async countPodiumsForDriver(season: number, driverId: string): Promise<number> {
+  try {
+    const response = await fetch(`${BASE_URL}/${season}/results.json?limit=1000`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const races = data.MRData?.RaceTable?.Races || [];
+
+    let podiums = 0;
+
+    for (const race of races) {
+      const result = race.Results.find((r: any) => r.Driver.driverId === driverId);
+      if (result && ['1', '2', '3'].includes(result.position)) {
+        podiums++;
+      }
+    }
+
+    return podiums;
+  } catch (error) {
+    console.error(`Error counting podiums for ${driverId}:`, error);
+    return 0;
+  }
+}
+
   async fetchDriverStandings(season: number): Promise<Driver[]> {
     try {
       console.log(`Fetching driver standings for season ${season}`);
@@ -81,6 +108,7 @@ export class F1DataService {
         team: standing.Constructors?.[0]?.name || 'Unknown Team',
         points: parseInt(standing.points) || 0,
         wins: parseInt(standing.wins) || 0,
+				podiums: this.countPodiumsForDriver(season, standing.Driver?.driverId),
         driverId: standing.Driver?.driverId,
         nationality: standing.Driver?.nationality
       }));

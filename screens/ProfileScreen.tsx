@@ -1,27 +1,61 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, Image } from 'react-native';
 import { commonStyles, colors } from '../styles/commonStyles';
 import Icon from '../components/Icon';
 import Button from '../components/Button';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useState } from 'react';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
-const userStats = {
+const defaultUserStats = {
   name: 'F1 Fan',
-  favoriteTeam: 'Red Bull Racing',
-  favoriteDriver: 'Max Verstappen',
-  racesWatched: 156,
+  favoriteTeam: 'Scuderia Ferrari',
+  favoriteDriver: 'Lewis Hamilton',
+  racesWatched: 100,
   predictionsCorrect: 89,
-  memberSince: 'March 2020',
+  memberSince: 'March 2021',
+  profilePicIndex: 0,
 };
 
 const menuItems = [
-  { id: 1, title: 'Notifications', icon: 'notifications' as const, hasSwitch: true },
-  { id: 2, title: 'Favorite Teams', icon: 'heart' as const, hasSwitch: false },
-  { id: 3, title: 'Race Reminders', icon: 'alarm' as const, hasSwitch: true },
-  { id: 4, title: 'Data & Privacy', icon: 'shield-checkmark' as const, hasSwitch: false },
-  { id: 5, title: 'About', icon: 'information-circle' as const, hasSwitch: false },
+  { id: 1, title: 'Notifications', icon: 'notifications', hasSwitch: true },
+  { id: 2, title: 'Favorite Teams', icon: 'heart', hasSwitch: false },
+  { id: 3, title: 'Race Reminders', icon: 'alarm', hasSwitch: true },
+  { id: 4, title: 'Data & Privacy', icon: 'shield-checkmark', hasSwitch: false },
+  { id: 5, title: 'About', icon: 'information-circle', hasSwitch: false },
 ];
 
 export default function ProfileScreen() {
-  const handleMenuPress = (item: typeof menuItems[0]) => {
+  const [userStats, setUserStats] = useState(defaultUserStats);
+  const [editing, setEditing] = useState(false);
+  const [editedStats, setEditedStats] = useState(defaultUserStats);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const savedStats = await AsyncStorage.getItem('userStats');
+      if (savedStats) {
+        setUserStats(JSON.parse(savedStats));
+        setEditedStats(JSON.parse(savedStats));
+      }
+    } catch (e) {
+      console.error('Failed to load stats', e);
+    }
+  };
+
+  const saveStats = async (newStats: typeof defaultUserStats) => {
+    try {
+      await AsyncStorage.setItem('userStats', JSON.stringify(newStats));
+      setUserStats(newStats);
+    } catch (e) {
+      console.error('Failed to save stats', e);
+    }
+  };
+
+  const handleMenuPress = (item: (typeof menuItems)[0]) => {
     Alert.alert(item.title, `${item.title} settings would open here.`);
   };
 
@@ -36,6 +70,12 @@ export default function ProfileScreen() {
     );
   };
 
+  const profilePics = [
+  require('../assets/profile-pics/avatar1.png'),
+  require('../assets/profile-pics/avatar2.png'),
+  require('../assets/profile-pics/avatar3.png'),
+  ]
+
   return (
     <View style={commonStyles.container}>
       <View style={commonStyles.header}>
@@ -47,31 +87,136 @@ export default function ProfileScreen() {
         <View style={commonStyles.section}>
           <View style={[commonStyles.card, { backgroundColor: colors.primary }]}>
             <View style={commonStyles.centerContent}>
-              <View style={[
-                commonStyles.centerContent,
-                {
-                  width: 80,
-                  height: 80,
-                  borderRadius: 40,
-                  backgroundColor: colors.accent,
-                  marginBottom: 16,
-                }
-              ]}>
-                <Icon name="person" size={40} style={{ color: colors.primary }} />
-              </View>
+              <TouchableOpacity
+  onPress={() => {
+    if (!editing) return;
+    const nextIndex = (editedStats.profilePicIndex + 1) % profilePics.length;
+    setEditedStats({ ...editedStats, profilePicIndex: nextIndex });
+  }}
+  style={[
+    commonStyles.centerContent,
+    {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: colors.accent,
+      marginBottom: 16,
+      overflow: 'hidden',
+    }
+  ]}
+>
+  <Image
+    source={profilePics[userStats.profilePicIndex]}
+    style={{ width: 80, height: 80 }}
+    resizeMode="cover"
+  />
+
+  {editing && (
+  <View style={{ flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', marginVertical: 12 }}>
+    {profilePics.map((pic, index) => (
+      <TouchableOpacity
+        key={index}
+        onPress={() => setEditedStats({ ...editedStats, profilePicIndex: index })}
+        style={{
+          margin: 6,
+          borderWidth: editedStats.profilePicIndex === index ? 2 : 0,
+          borderColor: colors.primary,
+          borderRadius: 40,
+          overflow: 'hidden',
+        }}
+      >
+        <Image
+          source={pic}
+          style={{ width: 60, height: 60 }}
+          resizeMode="cover"
+        />
+      </TouchableOpacity>
+    ))}
+  </View>
+)}
+</TouchableOpacity>
               <Text style={[commonStyles.title, { color: colors.accent, textAlign: 'center' }]}>
                 {userStats.name}
               </Text>
               <Text style={[commonStyles.textSecondary, { color: colors.accent, opacity: 0.8, textAlign: 'center' }]}>
                 Member since {userStats.memberSince}
               </Text>
+              <TouchableOpacity onPress={() => setEditing(true)}>
+                <Text style={{ color: colors.accent, marginTop: 8 }}>✏️ Edit</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
 
+{editing && (
+  <View style={[commonStyles.card, { marginTop: 16 }]}>
+    <TextInput
+      style={[commonStyles.text, { borderBottomWidth: 1, marginBottom: 8 }]}
+      value={editedStats.name}
+      onChangeText={(text) => setEditedStats({ ...editedStats, name: text })}
+      placeholder="Name"
+    />
+    <TextInput
+      style={[commonStyles.text, { borderBottomWidth: 1, marginBottom: 8 }]}
+      value={editedStats.favoriteTeam}
+      onChangeText={(text) => setEditedStats({ ...editedStats, favoriteTeam: text })}
+      placeholder="Favorite Team"
+    />
+    <TextInput
+      style={[commonStyles.text, { borderBottomWidth: 1, marginBottom: 8 }]}
+      value={editedStats.favoriteDriver}
+      onChangeText={(text) => setEditedStats({ ...editedStats, favoriteDriver: text })}
+      placeholder="Favorite Driver"
+    />
+    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <Text style={[commonStyles.text, { marginRight: 8 }]}>Races Watched:</Text>
+              <TextInput
+                style={[commonStyles.text, { borderBottomWidth: 1, flex: 1 }]}
+                keyboardType="numeric"
+                value={String(editedStats.racesWatched)}
+                onChangeText={(text) => setEditedStats({ ...editedStats, racesWatched: Number(text) || 0 })}
+              />
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <Text style={[commonStyles.text, { marginRight: 8 }]}>Predictions (%):</Text>
+              <TextInput
+                style={[commonStyles.text, { borderBottomWidth: 1, flex: 1 }]}
+                keyboardType="numeric"
+                value={String(editedStats.predictionsCorrect)}
+                onChangeText={(text) => setEditedStats({ ...editedStats, predictionsCorrect: Number(text) || 0 })}
+              />
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                          <TouchableOpacity onPress={() => setShowDatePicker(true)} style={{ marginBottom: 8 }}>
+              <Text style={[commonStyles.text, { color: colors.primary }]}>
+                📅 Edit Member Since: {new Date(editedStats.memberSince).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })}
+              </Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={new Date(editedStats.memberSince)}
+                mode="date"
+                display="default"
+                onChange={(_, selectedDate) => {
+                  setShowDatePicker(false);
+                  if (selectedDate) {
+                    setEditedStats({ ...editedStats, memberSince: selectedDate.toISOString().split('T')[0] });
+                  }
+                }}/>)}
+            </View>
+            <View style={commonStyles.row}>
+              <Button text="Cancel" onPress={() => setEditing(false)} />
+              <Button text="Save" onPress={() => {
+                saveStats(editedStats);
+                setEditing(false);
+              }} />
+            </View>
+          </View>
+        )}
+
         {/* Stats */}
         <View style={commonStyles.section}>
-          <Text style={commonStyles.subtitle}>Your F1 Stats</Text>
+          <Text style={commonStyles.subtitle}>My F1 Stats</Text>
           <View style={commonStyles.row}>
             <View style={[commonStyles.card, { flex: 1, marginRight: 8 }]}>
               <Text style={[commonStyles.title, { textAlign: 'center', color: colors.primary }]}>
@@ -121,7 +266,7 @@ export default function ProfileScreen() {
               onPress={() => handleMenuPress(item)}
             >
               <View style={commonStyles.row}>
-                <Icon name={item.icon} size={24} style={{ color: colors.text, marginRight: 16 }} />
+                <Icon name={item.icon as any} size={24} style={{ color: colors.text, marginRight: 16 }} />
                 <Text style={[commonStyles.text, { flex: 1 }]}>
                   {item.title}
                 </Text>

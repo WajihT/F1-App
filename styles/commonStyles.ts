@@ -36,6 +36,17 @@ export const buttonStyles = StyleSheet.create({
 });
 
 export const commonStyles = StyleSheet.create({
+
+    input: {
+    borderWidth: 1,
+    borderColor: colors.grey,
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+    fontSize: 16,
+    color: colors.text,
+    backgroundColor: colors.backgroundAlt,
+  },
   wrapper: {
     backgroundColor: colors.background,
     width: '100%',
@@ -51,6 +62,7 @@ export const commonStyles = StyleSheet.create({
     flex: 1,
     width: '100%',
     paddingHorizontal: 16,
+		marginTop: 20,
   },
   title: {
     fontSize: 28,
