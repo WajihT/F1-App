@@ -44,6 +44,12 @@
         "projectId": "2dbd90ec-87d1-49a0-84cc-ce7ca09703b4"
       }
     },
-    "owner": "bigunit"
+    "owner": "bigunit",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/2dbd90ec-87d1-49a0-84cc-ce7ca09703b4"
+    }
   }
 }

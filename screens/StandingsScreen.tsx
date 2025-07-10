@@ -3,7 +3,11 @@ import { useState, useEffect } from 'react';
 import { commonStyles, colors } from '../styles/commonStyles';
 import SeasonSelector from '../components/SeasonSelector';
 import { F1DataService, Driver, Constructor } from '../services/f1DataService';
-import { Trophy, Medal, Users, User } from 'lucide-react-native';
+//import { Trophy, Medal, Users, User } from 'lucide-react-native';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import Feather from '@expo/vector-icons/Feather';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 
 export default function StandingsScreen() {
@@ -110,16 +114,13 @@ export default function StandingsScreen() {
   onPress={() => setActiveTab('drivers')}
 >
   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-    <User
-      size={16}
-      color={activeTab === 'drivers' ? colors.accent : colors.text}
-      style={{ marginRight: 6 }}
-    />
+    <AntDesign name="user" size={24} color="black" />
     <Text
       style={[
         commonStyles.text,
         {
           fontWeight: '600',
+          marginLeft: 8,
           fontFamily: 'JetBrainsMono-Regular',
           color: activeTab === 'drivers' ? colors.accent : colors.text,
         },
@@ -145,16 +146,13 @@ export default function StandingsScreen() {
   onPress={() => setActiveTab('constructors')}
 >
   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-    <Users
-      size={16}
-      color={activeTab === 'constructors' ? colors.accent : colors.text}
-      style={{ marginRight: 6 }}
-    />
+    <Feather name="users" size={24} color="black" />
     <Text
       style={[
         commonStyles.text,
         {
           fontWeight: '600',
+          marginLeft: 8,
           fontFamily: 'JetBrainsMono-Regular',
           color: activeTab === 'constructors' ? colors.accent : colors.text,
         },
@@ -215,22 +213,18 @@ export default function StandingsScreen() {
                           </Text>
                         </View>
 
-                        <View style={[commonStyles.centerContent, { flexDirection: 'row', gap: 20 }]}>
+                        <View style={[commonStyles.centerContent, { flexDirection: 'row', gap: 8.5 }]}>
                           {/* Points */}
-                          <View style={{ alignItems: 'center', marginRight: 1 }}>
-                            <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 16, color: textColor }}>
-                              {driver.points}
-                            </Text>
-                            <Text style={[commonStyles.textSecondary, { fontSize: 10 }]}>PTS</Text>
-                          </View>
+                          
 
                           {/* Wins */}
+                          <View style={[commonStyles.centerContent, { flexDirection: 'row', gap: 20 }]}>
                           <View style={{ alignItems: 'center', marginRight: -10 }}>
                             <Text style={[commonStyles.text, { fontWeight: '600', fontSize: 16, color: textColor }]}>
                               {driver.wins}
                             </Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-                              <Trophy size={12} color="#facc15" />
+                              <Ionicons name="trophy-outline" size={12} color="#d97706" />
                               <Text style={[commonStyles.textSecondary, { fontSize: 10, marginLeft: 4 }]}>
                                 WINS
                               </Text>
@@ -243,11 +237,18 @@ export default function StandingsScreen() {
                               {driver.podiums}
                             </Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-                              <Medal size={12} color="#d97706" />
+                              <Ionicons name="medal-outline" size={12} color="#d97706" />
                               <Text style={[commonStyles.textSecondary, { fontSize: 10, marginLeft: 4 }]}>
                                 PODIUMS
                               </Text>
                             </View>
+                          </View>
+                        </View>
+                        <View style={{ alignItems: 'center', marginRight: 1 }}>
+                            <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 16, color: textColor }}>
+                              {driver.points}
+                            </Text>
+                            <Text style={[commonStyles.textSecondary, { fontSize: 10 }]}>PTS</Text>
                           </View>
                         </View>
                       </View>

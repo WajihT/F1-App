@@ -57,7 +57,9 @@
     "workbox-cli": "^7.3.0",
     "workbox-precaching": "^7.3.0",
     "workbox-webpack-plugin": "^7.3.0",
-    "react-native-svg": "15.11.2"
+    "react-native-svg": "15.11.2",
+    "@react-native-async-storage/async-storage": "2.1.2",
+    "expo-updates": "~0.28.17"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

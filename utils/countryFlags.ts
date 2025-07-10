@@ -23,7 +23,7 @@ export const countryFlags: { [key: string]: string } = {
   'Spain': 'https://flagcdn.com/w80/es.png',
   'Thailand': 'https://flagcdn.com/w80/th.png',
   'Turkey': 'https://flagcdn.com/w80/tr.png',
-  'United Kingdom': 'https://flagcdn.com/w80/gb.png',
+  'UK': 'https://flagcdn.com/w80/gb.png',
   'United States': 'https://flagcdn.com/w80/us.png',
   'UAE': 'https://flagcdn.com/w80/ae.png',
   'United Arab Emirates': 'https://flagcdn.com/w80/ae.png',
