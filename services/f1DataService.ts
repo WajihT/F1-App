@@ -90,33 +90,47 @@ export class F1DataService {
   }
 }
 
-  async fetchDriverStandings(season: number): Promise<Driver[]> {
-    try {
-      console.log(`Fetching driver standings for season ${season}`);
-      const response = await fetch(`${BASE_URL}/${season}/driverStandings.json`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      const standings = data.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings || [];
-      
-      return standings.map((standing: any, index: number) => ({
+delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async fetchDriverStandings(season: number): Promise<Driver[]> {
+  try {
+    console.log(`Fetching driver standings for season ${season}`);
+    const response = await fetch(`${BASE_URL}/${season}/driverStandings.json`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const standings = data.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings || [];
+
+    const drivers: Driver[] = [];
+
+    for (const [index, standing] of standings.entries()) {
+      const driverId = standing.Driver?.driverId;
+      const podiums = await this.countPodiumsForDriver(season, driverId); // sequential
+      //await this.delay(1000); // 1 second delay to avoid rate limit
+
+      drivers.push({
         position: parseInt(standing.position) || index + 1,
         name: `${standing.Driver?.givenName || ''} ${standing.Driver?.familyName || ''}`.trim(),
         team: standing.Constructors?.[0]?.name || 'Unknown Team',
         points: parseInt(standing.points) || 0,
         wins: parseInt(standing.wins) || 0,
-				podiums: this.countPodiumsForDriver(season, standing.Driver?.driverId),
-        driverId: standing.Driver?.driverId,
+        podiums,
+        driverId,
         nationality: standing.Driver?.nationality
-      }));
-    } catch (error) {
-      console.error('Error fetching driver standings:', error);
-      return this.getFallbackDriverStandings();
+      });
     }
+
+    return drivers;
+  } catch (error) {
+    console.error('Error fetching driver standings:', error);
+    return this.getFallbackDriverStandings();
   }
+}
 
   async fetchConstructorStandings(season: number): Promise<Constructor[]> {
     try {
@@ -200,11 +214,11 @@ export class F1DataService {
   // Fallback data for when API is unavailable
   private getFallbackDriverStandings(): Driver[] {
     return [
-      { position: 1, name: 'Max Verstappen', team: 'Red Bull Racing', points: 575, wins: 19 },
-      { position: 2, name: 'Sergio Perez', team: 'Red Bull Racing', points: 285, wins: 2 },
-      { position: 3, name: 'Lewis Hamilton', team: 'Mercedes', points: 234, wins: 1 },
-      { position: 4, name: 'Fernando Alonso', team: 'Aston Martin', points: 206, wins: 0 },
-      { position: 5, name: 'Charles Leclerc', team: 'Ferrari', points: 206, wins: 1 },
+      { position: 1, name: 'Max Verstappen', team: 'Red Bull Racing', wins: 19, podiums:  21, points: 575},
+      { position: 2, name: 'Sergio Perez', team: 'Red Bull Racing', wins: 2, podiums: 9, points: 285 },
+      { position: 3, name: 'Lewis Hamilton', team: 'Mercedes', wins: 1, podiums: 6, points: 234 },
+      { position: 4, name: 'Fernando Alonso', team: 'Aston Martin', wins: 0, podiums: 8, points: 206 },
+      { position: 5, name: 'Charles Leclerc', team: 'Ferrari', wins: 1, podiums: 7, points: 206 },
     ];
   }
 

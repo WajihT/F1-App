@@ -1,4 +1,12 @@
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Image, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+} from 'react-native';
 import { useState, useEffect } from 'react';
 import { commonStyles, colors } from '../styles/commonStyles';
 import Icon from '../components/Icon';
@@ -33,6 +41,7 @@ export default function CalendarScreen() {
   const [selectedSeason, setSelectedSeason] = useState(new Date().getFullYear());
   const [races, setRaces] = useState<Race[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedRace, setSelectedRace] = useState<Race | null>(null);
 
   const f1Service = F1DataService.getInstance();
 
@@ -43,7 +52,7 @@ export default function CalendarScreen() {
   const loadRaceCalendar = async () => {
     setLoading(true);
     console.log(`Loading race calendar for season ${selectedSeason}`);
-    
+
     try {
       const raceData = await f1Service.fetchRaceCalendar(selectedSeason);
       setRaces(raceData);
@@ -92,7 +101,7 @@ export default function CalendarScreen() {
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
       });
     } catch {
       return dateString;
@@ -101,7 +110,7 @@ export default function CalendarScreen() {
 
   const renderFlag = (country: string) => {
     const flagUrl = getCountryFlag(country);
-    
+
     return (
       <Image
         source={{ uri: flagUrl }}
@@ -123,10 +132,7 @@ export default function CalendarScreen() {
       </View>
 
       <View style={commonStyles.content}>
-        <SeasonSelector
-          selectedSeason={selectedSeason}
-          onSeasonChange={handleSeasonChange}
-        />
+        <SeasonSelector selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
 
         {loading ? (
           <View style={[commonStyles.centerContent, { flex: 1 }]}>
@@ -137,70 +143,125 @@ export default function CalendarScreen() {
           </View>
         ) : (
           <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
-            <View style={commonStyles.section}>
-              <Text style={commonStyles.subtitle}>{selectedSeason} Season</Text>
-              {races.length === 0 ? (
-                <View style={commonStyles.card}>
-                  <Text style={[commonStyles.text, { textAlign: 'center' }]}>
-                    No race calendar available for {selectedSeason}
+            {selectedRace ? (
+              <View style={commonStyles.section}>
+                <Text style={commonStyles.headerTitle}>{selectedRace.name}</Text>
+                <Text style={[commonStyles.text, { marginBottom: 8 }]}>
+                  📍 {selectedRace.location}, {selectedRace.country}
+                </Text>
+                <Text style={commonStyles.textSecondary}>
+                  🗓️ {formatDate(selectedRace.date)}
+                </Text>
+                {selectedRace.winner && (
+                  <Text style={[commonStyles.text, { marginTop: 12 }]}>
+                    🏆 Winner: {selectedRace.winner}
                   </Text>
-                </View>
-              ) : (
-                races.map((race) => (
-                  <TouchableOpacity key={`${race.id}-${race.name}`} style={commonStyles.card}>
-                    <View style={commonStyles.row}>
-                      <View style={{ flex: 1 }}>
-                        <View style={[commonStyles.row, { marginBottom: 8, alignItems: 'center' }]}>
-                          {renderFlag(race.country)}
-                          <Text style={[commonStyles.text, { fontWeight: '600', flex: 1 }]}>
-                            {race.name}
+                )}
+
+                <TouchableOpacity
+  style={{
+    backgroundColor: colors.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 24,
+  }}
+  onPress={() => setSelectedRace(null)}
+>
+  <Text style={{ color: colors.background, fontSize: 16, fontWeight: '600' }}>
+    ← Back to Calendar
+  </Text>
+</TouchableOpacity>
+              </View>
+            ) : (
+              <View style={commonStyles.section}>
+                <Text style={commonStyles.subtitle}>{selectedSeason} Season</Text>
+                {races.length === 0 ? (
+                  <View style={commonStyles.card}>
+                    <Text style={[commonStyles.text, { textAlign: 'center' }]}>
+                      No race calendar available for {selectedSeason}
+                    </Text>
+                  </View>
+                ) : (
+                  races.map((race) => (
+                    <TouchableOpacity
+                      key={`${race.id}-${race.name}`}
+                      style={commonStyles.card}
+                      onPress={() => setSelectedRace(race)}
+                    >
+                      <View style={commonStyles.row}>
+                        <View style={{ flex: 1 }}>
+                          <View
+                            style={[
+                              commonStyles.row,
+                              { marginBottom: 8, alignItems: 'center' },
+                            ]}
+                          >
+                            {renderFlag(race.country)}
+                            <Text
+                              style={[commonStyles.text, { fontWeight: '600', flex: 1 }]}
+                            >
+                              {race.name}
+                            </Text>
+                            <View
+                              style={{
+                                backgroundColor: getStatusColor(race.status),
+                                paddingHorizontal: 8,
+                                paddingVertical: 4,
+                                borderRadius: 12,
+                              }}
+                            >
+                              <Text
+                                style={[
+                                  commonStyles.textSecondary,
+                                  {
+                                    fontSize: 10,
+                                    color: colors.background,
+                                    fontWeight: '600',
+                                  },
+                                ]}
+                              >
+                                {getStatusText(race.status)}
+                              </Text>
+                            </View>
+                          </View>
+
+                          <Text style={[commonStyles.textSecondary, { marginBottom: 4 }]}>
+                            {race.location}
                           </Text>
-                          <View style={[
-                            {
-                              backgroundColor: getStatusColor(race.status),
-                              paddingHorizontal: 8,
-                              paddingVertical: 4,
-                              borderRadius: 12,
-                            }
-                          ]}>
-                            <Text style={[
-                              commonStyles.textSecondary, 
-                              { 
-                                fontSize: 10, 
-                                color: colors.background,
-                                fontWeight: '600' 
-                              }
-                            ]}>
-                              {getStatusText(race.status)}
-                            </Text>
-                          </View>
+                          <Text style={[commonStyles.textSecondary, { marginBottom: 4 }]}>
+                            📍 {race.country}
+                          </Text>
+                          <Text style={[commonStyles.textSecondary, { marginBottom: 8 }]}>
+                            📅 {formatDate(race.date)}
+                          </Text>
+
+                          {race.winner && (
+                            <View style={[commonStyles.row, { alignItems: 'center' }]}>
+                              <Icon
+                                name="trophy"
+                                size={16}
+                                style={{ color: colors.warning, marginRight: 8 }}
+                              />
+                              <Text
+                                style={[
+                                  commonStyles.text,
+                                  { color: colors.warning, fontWeight: '600' },
+                                ]}
+                              >
+                                Winner: {race.winner}
+                              </Text>
+                            </View>
+                          )}
                         </View>
-                        
-                        <Text style={[commonStyles.textSecondary, { marginBottom: 4 }]}>
-                          {race.location}
-                        </Text>
-                        <Text style={[commonStyles.textSecondary, { marginBottom: 4 }]}>
-                          📍 {race.country}
-                        </Text>
-                        <Text style={[commonStyles.textSecondary, { marginBottom: 8 }]}>
-                          📅 {formatDate(race.date)}
-                        </Text>
-                        
-                        {race.winner && (
-                          <View style={[commonStyles.row, { alignItems: 'center' }]}>
-                            <Icon name="trophy" size={16} style={{ color: colors.warning, marginRight: 8 }} />
-                            <Text style={[commonStyles.text, { color: colors.warning, fontWeight: '600' }]}>
-                              Winner: {race.winner}
-                            </Text>
-                          </View>
-                        )}
+                        <Icon name="chevron-forward" size={20} style={{ color: colors.grey }} />
                       </View>
-                      <Icon name="chevron-forward" size={20} style={{ color: colors.grey }} />
-                    </View>
-                  </TouchableOpacity>
-                ))
-              )}
-            </View>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </View>
+            )}
           </ScrollView>
         )}
       </View>
