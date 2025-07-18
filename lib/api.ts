@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://f1analytics-be-production.up.railway.app'
+const API_BASE_URL = 'http://192.168.0.186:8000'; // Use your FastAPI backend URL
 
 export async function fetchDriverStandings(year: number) {
   const response = await fetch(`${API_BASE_URL}/api/standings/drivers?year=${year}`);
