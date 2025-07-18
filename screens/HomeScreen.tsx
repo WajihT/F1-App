@@ -1,9 +1,13 @@
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { commonStyles, colors } from '../styles/commonStyles';
 import Icon from '../components/Icon';
 import SeasonSelector from '../components/SeasonSelector';
 import { F1DataService, Driver, Constructor, Race } from '../services/f1DataService';
+import Svg, { G, Path } from 'react-native-svg';
+import { Animated } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import TireIcon from "../assets/TireIcon"; 
 
 export default function HomeScreen() {
   const [selectedSeason, setSelectedSeason] = useState(new Date().getFullYear());
@@ -13,10 +17,21 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(false);
 
   const f1Service = F1DataService.getInstance();
+  const navigation = useNavigation();
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     loadHomeData();
   }, [selectedSeason]);
+
+    useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.3, duration: 1000, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
 
   const loadHomeData = async () => {
     setLoading(true);
@@ -102,9 +117,49 @@ export default function HomeScreen() {
 
   return (
     <View style={commonStyles.container}>
-      <View style={commonStyles.header}>
-        <Text style={commonStyles.headerTitle}>F1 Dashboard</Text>
-      </View>
+      <View
+  style={{
+    alignItems: 'center',        // 🔴 Center horizontally
+    justifyContent: 'center',    // 🔴 Center vertically (optional)
+    marginBottom: 16,
+  }}
+>
+  <TouchableOpacity
+    style={{
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    }}
+  >
+    <View style={{ position: 'relative', marginRight: 8 }}>
+      <Animated.View
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderRadius: 999,
+          backgroundColor: 'rgba(239,68,68,0.2)',
+          transform: [{ scale: pulseAnim }],
+        }}
+      />
+      <TireIcon width={28} height={28} fill="#ef4444" />
+    </View>
+
+    <Text
+      style={{
+        fontWeight: 'bold',
+        fontSize: 24,
+        color: '#fff',
+        letterSpacing: -1,
+      }}
+    >
+      F1 <Text style={{ color: '#ef4444' }}>Analytics</Text>
+    </Text>
+  </TouchableOpacity>
+</View>
+
 
       <View style={commonStyles.content}>
         <SeasonSelector
@@ -155,25 +210,43 @@ export default function HomeScreen() {
             <View style={commonStyles.section}>
               <Text style={commonStyles.subtitle}>Championship Leaders</Text>
               <View style={commonStyles.row}>
-                <View style={[commonStyles.card, { flex: 1, marginRight: 8 }]}>
+                <View       style={[
+        commonStyles.card,
+        {
+          flex: 1,
+          marginRight: 8,
+          backgroundColor: '#1e1b13',
+          borderColor: '#a58f43',
+          borderWidth: 1,
+        },
+      ]}>
                   <Text style={[commonStyles.textSecondary, { textAlign: 'center' }]}>
                     Driver
                   </Text>
                   <Text style={[commonStyles.title, { textAlign: 'center', fontSize: 18 }]}>
                     {driverLeader ? driverLeader.name : 'Loading...'}
                   </Text>
-                  <Text style={[commonStyles.text, { textAlign: 'center', color: colors.primary }]}>
+                  <Text style={[commonStyles.text, { textAlign: 'center', color: '#facc15' }]}>
                     {driverLeader ? `${driverLeader.points} pts` : '-'}
                   </Text>
                 </View>
-                <View style={[commonStyles.card, { flex: 1, marginLeft: 8 }]}>
+                <View style={[
+        commonStyles.card,
+        {
+          flex: 1,
+          marginLeft: 8,
+          backgroundColor: '#1e1b13',
+          borderColor: '#a58f43',
+          borderWidth: 1,
+        },
+      ]}>
                   <Text style={[commonStyles.textSecondary, { textAlign: 'center' }]}>
                     Constructor
                   </Text>
                   <Text style={[commonStyles.title, { textAlign: 'center', fontSize: 18 }]}>
                     {constructorLeader ? constructorLeader.name : 'Loading...'}
                   </Text>
-                  <Text style={[commonStyles.text, { textAlign: 'center', color: colors.primary }]}>
+                  <Text style={[commonStyles.text, { textAlign: 'center', color: '#facc15' }]}>
                     {constructorLeader ? `${constructorLeader.points} pts` : '-'}
                   </Text>
                 </View>

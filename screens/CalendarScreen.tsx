@@ -110,6 +110,7 @@ export default function CalendarScreen() {
 
   const renderFlag = (country: string) => {
     const flagUrl = getCountryFlag(country);
+    console.log(`Rendering flag for country: ${country}, URL: ${flagUrl}`);
 
     return (
       <Image
@@ -228,7 +229,7 @@ export default function CalendarScreen() {
                           </View>
 
                           <Text style={[commonStyles.textSecondary, { marginBottom: 4 }]}>
-                            {race.location}
+                            {race.country}
                           </Text>
                           <Text style={[commonStyles.textSecondary, { marginBottom: 4 }]}>
                             📍 {race.country}

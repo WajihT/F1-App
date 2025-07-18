@@ -31,10 +31,19 @@ export interface Race {
   circuit?: string;
 }
 
+
 export interface Season {
   year: number;
   label: string;
 }
+
+import {
+  fetchDriverStandings,
+  fetchConstructorStandings,
+  fetchRaceResults,
+  fetchSchedule,
+  fetchAvailableSessions
+} from '../lib/api';
 
 // Available seasons from 1950 to current year
 export const getAvailableSeasons = (): Season[] => {
@@ -52,7 +61,7 @@ export const getAvailableSeasons = (): Season[] => {
 };
 
 // Base URL for jolpica-f1 API
-const BASE_URL = 'https://api.jolpi.ca/ergast/f1';
+//const BASE_URL = 'https://api.jolpi.ca/ergast/f1';
 
 export class F1DataService {
   private static instance: F1DataService;
@@ -66,7 +75,7 @@ export class F1DataService {
 
 	async countPodiumsForDriver(season: number, driverId: string): Promise<number> {
   try {
-    const response = await fetch(`${BASE_URL}/${season}/results.json?limit=1000`);
+    const response = await fetch(`/${season}/results.json?limit=1000`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -94,117 +103,81 @@ delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async fetchDriverStandings(season: number): Promise<Driver[]> {
+  async fetchDriverStandings(season: number): Promise<Driver[]> {
+    try {
+      const drivers = await fetchDriverStandings(season);
+      return drivers.map((driver: any, idx: number) => ({
+        position: driver.position ?? idx + 1, // <-- Use nullish coalescing to handle undefined
+        name: `${driver.name}`,
+        team: driver.team,
+        points: driver.points,
+        wins: driver.wins,
+        podiums: driver.podiums,
+        driverId: driver.driverId,
+        nationality: driver.nationality,
+      }));
+    } catch (error) {
+      console.error('Error fetching driver standings:', error);
+      return this.getFallbackDriverStandings();
+    }
+  }
+
+async fetchConstructorStandings(season: number): Promise<Constructor[]> {
   try {
-    console.log(`Fetching driver standings for season ${season}`);
-    const response = await fetch(`${BASE_URL}/${season}/driverStandings.json`);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const standings = data.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings || [];
-
-    const drivers: Driver[] = [];
-
-    for (const [index, standing] of standings.entries()) {
-      const driverId = standing.Driver?.driverId;
-      const podiums = await this.countPodiumsForDriver(season, driverId); // sequential
-      //await this.delay(1000); // 1 second delay to avoid rate limit
-
-      drivers.push({
-        position: parseInt(standing.position) || index + 1,
-        name: `${standing.Driver?.givenName || ''} ${standing.Driver?.familyName || ''}`.trim(),
-        team: standing.Constructors?.[0]?.name || 'Unknown Team',
-        points: parseInt(standing.points) || 0,
-        wins: parseInt(standing.wins) || 0,
-        podiums,
-        driverId,
-        nationality: standing.Driver?.nationality
-      });
-    }
-
-    return drivers;
+    const teams = await fetchConstructorStandings(season);
+    console.log(teams);
+    return teams.map((team: any, idx: number) => ({
+      position: team.position ?? idx + 1,
+      name: `${team.team}`,
+      points: team.points + ' PTS',
+      wins: team.wins,
+      constructorId: team.constructorId,
+      nationality: team.nationality,
+    }));
   } catch (error) {
-    console.error('Error fetching driver standings:', error);
-    return this.getFallbackDriverStandings();
+    console.error('Error fetching constructor standings:', error);
+    return this.getFallbackConstructorStandings();
   }
 }
 
-  async fetchConstructorStandings(season: number): Promise<Constructor[]> {
-    try {
-      console.log(`Fetching constructor standings for season ${season}`);
-      const response = await fetch(`${BASE_URL}/${season}/constructorStandings.json`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+async fetchRaceCalendar(season: number): Promise<Race[]> {
+  try {
+    const scheduleEvents = await fetchSchedule(season); // This returns ScheduleEvent[]
+    const now = new Date();
+    const races: Race[] = scheduleEvents.map((event: any, idx: number) => {
+      const eventDate = new Date(event.EventDate);
+      let status: 'completed' | 'upcoming' | 'live';
+      if (eventDate < now) {
+        status = 'completed';
+      } else if (eventDate == now) {
+        status = 'live';
+      } else {
+        status = 'upcoming';
       }
-      
-      const data = await response.json();
-      const standings = data.MRData?.StandingsTable?.StandingsLists?.[0]?.ConstructorStandings || [];
-      
-      return standings.map((standing: any, index: number) => ({
-        position: parseInt(standing.position) || index + 1,
-        name: standing.Constructor?.name || 'Unknown Constructor',
-        points: parseInt(standing.points) || 0,
-        wins: parseInt(standing.wins) || 0,
-        constructorId: standing.Constructor?.constructorId,
-        nationality: standing.Constructor?.nationality
-      }));
-    } catch (error) {
-      console.error('Error fetching constructor standings:', error);
-      return this.getFallbackConstructorStandings();
-    }
+      // Optionally, add logic for 'live' if you have session times
+      return {
+        id: event.RoundNumber ?? idx + 1,
+        name: event.EventName,
+        location: event.Location,
+        country: event.Country,
+        date: event.EventDate,
+        status,
+        round: event.RoundNumber,
+        circuit: event.Location,
+      };
+    });
+    return races;
+  } catch (error) {
+    console.error('Error fetching race calendar:', error);
+    return this.getFallbackRaceCalendar();
   }
-
-  async fetchRaceCalendar(season: number): Promise<Race[]> {
-    try {
-      console.log(`Fetching race calendar for season ${season}`);
-      const response = await fetch(`${BASE_URL}/${season}.json`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      const races = data.MRData?.RaceTable?.Races || [];
-      
-      return races.map((race: any, index: number) => {
-        const raceDate = new Date(race.date);
-        const now = new Date();
-        const status = raceDate < now ? 'completed' : 'upcoming';
-        
-        return {
-          id: index + 1,
-          name: race.raceName || 'Unknown Race',
-          location: race.Circuit?.circuitName || 'Unknown Circuit',
-          country: race.Circuit?.Location?.country || 'Unknown Country',
-          date: race.date || '',
-          status,
-          round: parseInt(race.round) || index + 1,
-          circuit: race.Circuit?.circuitId
-        };
-      });
-    } catch (error) {
-      console.error('Error fetching race calendar:', error);
-      return this.getFallbackRaceCalendar();
-    }
-  }
+}
 
   async fetchRaceResults(season: number, round: number): Promise<any> {
     try {
-      console.log(`Fetching race results for season ${season}, round ${round}`);
-      const response = await fetch(`${BASE_URL}/${season}/${round}/results.json`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      const results = data.MRData?.RaceTable?.Races?.[0]?.Results || [];
-      
-      return results.length > 0 ? results[0] : null;
+      const results = await fetchRaceResults(season); // You may need to adjust this to fetch a specific round
+      // If your backend supports fetching by round, update the API and api.ts accordingly
+      return results;
     } catch (error) {
       console.error('Error fetching race results:', error);
       return null;

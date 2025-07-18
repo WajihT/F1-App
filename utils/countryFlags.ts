@@ -23,7 +23,7 @@ export const countryFlags: { [key: string]: string } = {
   'Spain': 'https://flagcdn.com/w80/es.png',
   'Thailand': 'https://flagcdn.com/w80/th.png',
   'Turkey': 'https://flagcdn.com/w80/tr.png',
-  'UK': 'https://flagcdn.com/w80/gb.png',
+  'United Kingdom': 'https://flagcdn.com/w80/gb.png',
   'United States': 'https://flagcdn.com/w80/us.png',
   'UAE': 'https://flagcdn.com/w80/ae.png',
   'United Arab Emirates': 'https://flagcdn.com/w80/ae.png',
@@ -57,9 +57,12 @@ export const countryFlags: { [key: string]: string } = {
 };
 
 export const getCountryFlag = (country: string): string => {
+  if (!country || typeof country !== 'string') {
+    console.log(`Country is undefined or not a string, using default flag`);
+    return 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=80&h=60&fit=crop&crop=center';
+  }
+
   console.log(`Getting flag for country: ${country}`);
-  
-  // Handle special cases and normalize country names
   const normalizedCountry = country.trim();
   
   // Direct lookup
