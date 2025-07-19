@@ -4,7 +4,6 @@ import { commonStyles, colors } from '../styles/commonStyles';
 import Icon from '../components/Icon';
 import SeasonSelector from '../components/SeasonSelector';
 import { F1DataService, Driver, Constructor, Race } from '../services/f1DataService';
-import Svg, { G, Path } from 'react-native-svg';
 import { Animated } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import TireIcon from "../assets/TireIcon"; 
@@ -41,7 +40,7 @@ export default function HomeScreen() {
       const [drivers, constructors, races] = await Promise.all([
         f1Service.fetchDriverStandings(selectedSeason),
         f1Service.fetchConstructorStandings(selectedSeason),
-        f1Service.fetchRaceCalendar(selectedSeason)
+        f1Service.fetchRaceCalendar(selectedSeason),
       ]);
       
       // Get leaders

@@ -29,8 +29,17 @@ export interface Race {
   winner?: string;
   round?: number;
   circuit?: string;
+  winnerTeam?: string;
 }
 
+export interface RaceResults {
+  year: number; 
+  event: string; 
+  round: number; 
+  driver: string; 
+  team: string; 
+  teamColor: string;
+}
 
 export interface Season {
   year: number;
@@ -42,7 +51,7 @@ import {
   fetchConstructorStandings,
   fetchRaceResults,
   fetchSchedule,
-  fetchAvailableSessions
+  fetchAvailableSessions,
 } from '../lib/api';
 
 // Available seasons from 1950 to current year
@@ -106,6 +115,7 @@ delay(ms: number) {
   async fetchDriverStandings(season: number): Promise<Driver[]> {
     try {
       const drivers = await fetchDriverStandings(season);
+      //console.log(drivers);
       return drivers.map((driver: any, idx: number) => ({
         position: driver.position ?? idx + 1, // <-- Use nullish coalescing to handle undefined
         name: `${driver.name}`,
@@ -125,7 +135,6 @@ delay(ms: number) {
 async fetchConstructorStandings(season: number): Promise<Constructor[]> {
   try {
     const teams = await fetchConstructorStandings(season);
-    console.log(teams);
     return teams.map((team: any, idx: number) => ({
       position: team.position ?? idx + 1,
       name: `${team.team}`,
@@ -143,6 +152,7 @@ async fetchConstructorStandings(season: number): Promise<Constructor[]> {
 async fetchRaceCalendar(season: number): Promise<Race[]> {
   try {
     const scheduleEvents = await fetchSchedule(season); // This returns ScheduleEvent[]
+    //console.log(scheduleEvents);
     const now = new Date();
     const races: Race[] = scheduleEvents.map((event: any, idx: number) => {
       const eventDate = new Date(event.EventDate);
@@ -173,15 +183,21 @@ async fetchRaceCalendar(season: number): Promise<Race[]> {
   }
 }
 
-  async fetchRaceResults(season: number, round: number): Promise<any> {
-    try {
-      const results = await fetchRaceResults(season); // You may need to adjust this to fetch a specific round
-      // If your backend supports fetching by round, update the API and api.ts accordingly
-      return results;
-    } catch (error) {
-      console.error('Error fetching race results:', error);
-      return null;
-    }
+  async fetchRaceResults(season: number): Promise<any> {
+      try {
+    const results = await fetchRaceResults(season);
+    return results.map((result: any, idx: number) => ({
+      year: result.year,
+      event: result.event,
+      round: result.round,
+      driver: result.driver,
+      team: result.team,
+      teamColor: result.teamColor,
+    }));
+  } catch (error) {
+    console.error('Error fetching race results:', error);
+    return this.getFallbackRaceResults();
+  }
   }
 
   // Fallback data for when API is unavailable
@@ -223,6 +239,13 @@ async fetchRaceCalendar(season: number): Promise<Race[]> {
         date: 'December 8, 2024',
         status: 'upcoming',
       },
+    ];
+  }
+
+  private getFallbackRaceResults(): any[] {
+    return [
+      { year: 2024, event: 'Bahrain Grand Prix', round: 1, driver: 'Max Verstappen', team: 'Red Bull Racing', teamColor: '#1E41FF' },
+      { year: 2024, event: 'Abu Dhabi Grand Prix', round: 2, driver: 'Lewis Hamilton', team: 'Mercedes', teamColor: '#00D2BE' },
     ];
   }
 }

@@ -13,6 +13,7 @@ export const colors = {
   success: '#00ff00',      // Green
   warning: '#ffaa00',      // Orange
   border: '#333333',       // Border Gray
+  darkCard: '#111112', // Dark Card Background
 };
 
 export const buttonStyles = StyleSheet.create({

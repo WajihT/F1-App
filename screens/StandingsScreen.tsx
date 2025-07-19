@@ -114,7 +114,7 @@ export default function StandingsScreen() {
   onPress={() => setActiveTab('drivers')}
 >
   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-    <AntDesign name="user" size={24} color="black" />
+    <AntDesign name="user" size={24} color="white" />
     <Text
       style={[
         commonStyles.text,
@@ -146,7 +146,7 @@ export default function StandingsScreen() {
   onPress={() => setActiveTab('constructors')}
 >
   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-    <Feather name="users" size={24} color="black" />
+    <Feather name="users" size={24} color="white" />
     <Text
       style={[
         commonStyles.text,
