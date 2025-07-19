@@ -7,7 +7,7 @@ import {
   Image,
   StyleSheet,
 } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { commonStyles, colors } from '../styles/commonStyles';
 import Icon from '../components/Icon';
 import SeasonSelector from '../components/SeasonSelector';
@@ -19,6 +19,7 @@ import Feather from '@expo/vector-icons/Feather';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Octicons from '@expo/vector-icons/Octicons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Animated } from 'react-native'; 
 
 
 const styles = StyleSheet.create({
@@ -67,6 +68,8 @@ export default function CalendarScreen() {
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
 
   const f1Service = F1DataService.getInstance();
+
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     loadRaceCalendar();
@@ -139,6 +142,41 @@ export default function CalendarScreen() {
     }
   };
 
+  function RaceCardPlaceholder() {
+  return (
+    <View
+      style={{
+        backgroundColor: '#141422',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#222',
+        opacity: 0.6,
+        height: 175,
+      }}
+    >
+      {/* Flag + Title skeleton */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+        <View style={{
+          width: 40, height: 28, borderRadius: 6, backgroundColor: '#232a3a', marginRight: 12
+        }} />
+        <View>
+          <View style={{ width: 120, height: 16, backgroundColor: '#232a3a', borderRadius: 4, marginBottom: 6 }} />
+          <View style={{ width: 80, height: 12, backgroundColor: '#232a3a', borderRadius: 4 }} />
+        </View>
+      </View>
+      {/* Date + Status skeleton */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
+        <View style={{ width: 60, height: 12, backgroundColor: '#232a3a', borderRadius: 4 }} />
+        <View style={{ width: 50, height: 18, backgroundColor: '#232a3a', borderRadius: 999 }} />
+      </View>
+      {/* Winner skeleton */}
+      <View style={{ width: 100, height: 12, backgroundColor: '#232a3a', borderRadius: 4 }} />
+    </View>
+  );
+}
+
 const formatDate = (dateString: string) => {
   try {
     const date = new Date(dateString);
@@ -181,21 +219,51 @@ const getRoundPillTextColor = (round: number) => {
   style={{ flex: 1 }}
 >
       <View style={commonStyles.container}>
-      <View style={commonStyles.header}>
-        <Text style={commonStyles.headerTitle}>Race Calendar</Text>
-      </View>
+  <TouchableOpacity
+    style={{
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      alignSelf: 'center',
+    }}
+  >
+    <View style={{ position: 'relative', marginRight: 8 }}>
+      <Animated.View
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderRadius: 999,
+          backgroundColor: 'rgba(239,68,68,0.2)',
+          transform: [{ scale: pulseAnim }],
+        }}
+      />
+    </View>
+
+    <Text
+      style={{
+        fontWeight: 'bold',
+        fontSize: 24,
+        color: '#fff',
+        letterSpacing: -1,
+      }}
+    >
+      Race <Text style={{ color: '#ef4444' }}>Calendar</Text> <Text style={{ color: '#80a8d9' }}>& Results</Text>
+    </Text>
+  </TouchableOpacity>
 
       <View style={commonStyles.content}>
         <SeasonSelector selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
 
-        {loading ? (
-          <View style={[commonStyles.centerContent, { flex: 1 }]}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[commonStyles.text, { marginTop: 16 }]}>
-              Loading {selectedSeason} race calendar...
-            </Text>
-          </View>
-        ) : (
+{loading ? (
+  <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+    {[...Array(5)].map((_, idx) => (
+      <RaceCardPlaceholder key={idx} />
+    ))}
+  </ScrollView>
+) : (
           <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
             {selectedRace ? (
               <View style={commonStyles.section}>
@@ -236,7 +304,18 @@ const getRoundPillTextColor = (round: number) => {
               </View>
             ) : (
               <View style={commonStyles.section}>
-                <Text style={commonStyles.subtitle}>{selectedSeason} Season</Text>
+                <Text
+  style={{
+    fontSize: 14, // text-sm
+    color: '#9ca3af', // text-gray-400
+    fontWeight: '400',
+    marginBottom: 16,
+    textAlign: 'center',
+    fontFamily: 'Roboto_400Regular',
+  }}
+>
+  {selectedSeason} Season Overview
+</Text>
                 {races.length === 0 ? (
                   <View style={commonStyles.card}>
                     <Text style={commonStyles.text}>

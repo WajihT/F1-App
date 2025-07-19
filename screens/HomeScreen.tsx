@@ -187,8 +187,19 @@ export default function HomeScreen() {
             {/* Next Race Card */}
             {nextRace && (
               <View style={commonStyles.section}>
-                <Text style={commonStyles.subtitle}>Next Race</Text>
-                <View style={[commonStyles.card, { backgroundColor: colors.primary }]}>
+                                <Text
+  style={{
+    fontSize: 14, // text-sm
+    color: '#9ca3af', // text-gray-400
+    fontWeight: '400',
+    marginBottom: 16,
+    textAlign: 'center',
+    fontFamily: 'Roboto_400Regular',
+  }}
+>
+ Next Race
+</Text>
+                <View style={[commonStyles.card, { backgroundColor: '#7d2629', borderColor: '#ef4444', borderWidth: 1 }]}>
                   <View style={commonStyles.row}>
                     <View style={{ flex: 1 }}>
                       <Text style={[commonStyles.title, { color: colors.accent, fontSize: 20 }]}>
@@ -216,7 +227,19 @@ export default function HomeScreen() {
 
             {/* Quick Stats */}
             <View style={commonStyles.section}>
-              <Text style={commonStyles.subtitle}>Championship Leaders</Text>
+              <Text
+  style={[
+    commonStyles.subtitle,
+    {
+      textAlign: 'center',
+      color: '#b09117ff', // gold accent
+      fontWeight: '600',
+      marginBottom: 12,
+    },
+  ]}
+>
+  Championship Leaders
+</Text>
               <View style={commonStyles.row}>
                 <View       style={[
         commonStyles.card,

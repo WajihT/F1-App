@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { commonStyles, colors } from '../styles/commonStyles';
 import SeasonSelector from '../components/SeasonSelector';
 import { F1DataService, Driver, Constructor } from '../services/f1DataService';
@@ -9,6 +9,8 @@ import Feather from '@expo/vector-icons/Feather';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Animated } from 'react-native'; 
+
 
 
 
@@ -20,6 +22,8 @@ export default function StandingsScreen() {
   const [loading, setLoading] = useState(false);
 
   const f1Service = F1DataService.getInstance();
+
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     loadStandings();
@@ -56,6 +60,94 @@ export default function StandingsScreen() {
     if (position === 3) return '#CD7F32'; // Bronze
     return colors.text;
   };
+
+function DriverCardPlaceholder({ position }: { position: number }) {
+  // Gold, Silver, Bronze, Default
+  const bg =
+    position === 1
+      ? '#1e1b13'
+      : position === 2
+      ? '#1c1d21'
+      : position === 3
+      ? '#1b1512'
+      : '#18181b';
+  const border =
+    position === 1
+      ? '#a58f43'
+      : position === 2
+      ? '#4b5563'
+      : position === 3
+      ? '#7c3f10'
+      : 'transparent';
+
+  return (
+    <View
+      style={[
+        commonStyles.card,
+        {
+          backgroundColor: bg,
+          borderRadius: 16,
+          marginBottom: 12,
+          opacity: 0.6,
+          borderWidth: position <= 3 ? 1 : 0,
+          borderColor: border,
+        },
+      ]}
+    >
+      <View style={[commonStyles.row, { alignItems: 'center' }]}>
+        <View style={{ width: 40, height: 50, backgroundColor: '#232a3a', borderRadius: 4, marginRight: 12 }} />
+        <View style={{ flex: 1 }}>
+          <View style={{ width: '60%', height: 14, backgroundColor: '#232a3a', borderRadius: 4, marginBottom: 6 }} />
+          <View style={{ width: '40%', height: 12, backgroundColor: '#232a3a', borderRadius: 4 }} />
+        </View>
+        <View style={{ width: 60, height: 14, backgroundColor: '#232a3a', borderRadius: 4, marginLeft: 12 }} />
+      </View>
+    </View>
+  );
+}
+
+function ConstructorCardPlaceholder({ position }: { position: number }) {
+  const bg =
+    position === 1
+      ? '#1e1b13'
+      : position === 2
+      ? '#1c1d21'
+      : position === 3
+      ? '#1b1512'
+      : '#18181b';
+  const border =
+    position === 1
+      ? '#a58f43'
+      : position === 2
+      ? '#4b5563'
+      : position === 3
+      ? '#7c3f10'
+      : 'transparent';
+
+  return (
+    <View
+      style={[
+        commonStyles.card,
+        {
+          backgroundColor: bg,
+          borderRadius: 16,
+          marginBottom: 12,
+          opacity: 0.6,
+          borderWidth: position <= 3 ? 1 : 0,
+          borderColor: border,
+        },
+      ]}
+    >
+      <View style={[commonStyles.row, { alignItems: 'center' }]}>
+        <View style={{ width: 40, height: 50, backgroundColor: '#232a3a', borderRadius: 4, marginRight: 16 }} />
+        <View style={{ flex: 1 }}>
+          <View style={{ width: '60%', height: 14, backgroundColor: '#232a3a', borderRadius: 4, marginBottom: 6 }} />
+        </View>
+        <View style={{ width: 60, height: 14, backgroundColor: '#232a3a', borderRadius: 4, marginLeft: 12 }} />
+      </View>
+    </View>
+  );
+}
 
   const getRankStyles = (position: number) => {
   switch (position) {
@@ -96,9 +188,40 @@ export default function StandingsScreen() {
   style={{ flex: 1 }}
 >
     <View style={commonStyles.container}>
-      <View style={commonStyles.header}>
-        <Text style={commonStyles.headerTitle}>Championship Standings</Text>
-      </View>
+  <TouchableOpacity
+    style={{
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      alignSelf: 'center',
+    }}
+  >
+    <View style={{ position: 'relative', marginRight: 8 }}>
+      <Animated.View
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderRadius: 999,
+          backgroundColor: 'rgba(239,68,68,0.2)',
+          transform: [{ scale: pulseAnim }],
+        }}
+      />
+    </View>
+
+    <Text
+      style={{
+        fontWeight: 'bold',
+        fontSize: 24,
+        color: '#fff',
+        letterSpacing: -1,
+      }}
+    >
+      Championship <Text style={{ color: '#ef4444' }}>Standings</Text>
+    </Text>
+  </TouchableOpacity>
 
       <View style={commonStyles.content}>
         <SeasonSelector
@@ -173,14 +296,14 @@ export default function StandingsScreen() {
 </TouchableOpacity>
         </View>
 
-        {loading ? (
-          <View style={[commonStyles.centerContent, { flex: 1 }]}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[commonStyles.text, { marginTop: 16, textAlign: 'center' }]}>
-              Loading {selectedSeason} standings...
-            </Text>
-          </View>
-        ) : (
+{loading ? (
+  <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+    {activeTab === 'drivers'
+      ? [...Array(8)].map((_, idx) => <DriverCardPlaceholder key={idx} position={idx + 1} />)
+      : [...Array(6)].map((_, idx) => <ConstructorCardPlaceholder key={idx} position={idx + 1} />)
+    }
+  </ScrollView>
+) : (
           <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
             {activeTab === 'drivers' ? (
               <View style={commonStyles.section}>
