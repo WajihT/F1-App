@@ -16,6 +16,9 @@ import { getCountryFlag } from '../utils/countryFlags';
 import { Pressable } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Feather from '@expo/vector-icons/Feather';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import Octicons from '@expo/vector-icons/Octicons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 
 const styles = StyleSheet.create({
@@ -94,6 +97,22 @@ export default function CalendarScreen() {
     setSelectedSeason(season);
   };
 
+  const getRaceStatus = (raceDate: string) => {
+  const now = new Date();
+  const raceDay = new Date(raceDate);
+
+  const raceDateOnly = new Date(raceDay.toDateString());
+  const todayDateOnly = new Date(now.toDateString());
+
+  if (raceDateOnly.getTime() < todayDateOnly.getTime()) {
+    return 'completed';
+  } else if (raceDateOnly.getTime() === todayDateOnly.getTime()) {
+    return 'live';
+  } else {
+    return 'upcoming';
+  }
+}
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -154,7 +173,14 @@ const getRoundPillTextColor = (round: number) => {
   };
 
   return (
-    <View style={commonStyles.container}>
+<LinearGradient
+  colors={['#090710', '#030610', '#0c060b', '#090710']}
+  locations={[0, 0.15, 0.6, 1]}
+  start={{ x: 0.5, y: 0 }}
+  end={{ x: 0.5, y: 1 }}
+  style={{ flex: 1 }}
+>
+      <View style={commonStyles.container}>
       <View style={commonStyles.header}>
         <Text style={commonStyles.headerTitle}>Race Calendar</Text>
       </View>
@@ -219,100 +245,126 @@ const getRoundPillTextColor = (round: number) => {
                   </View>
                 ) : (
                   races.map((race) => (
-  <Pressable
-    key={`${race.id}-${race.name}`}
-    onPress={() => setSelectedRace(race)}
-    style={({ pressed }) => ({
-      backgroundColor: colors.darkCard,
-      borderRadius: 16,
-      padding: 16,
-      marginBottom: 16, // ⬅️ Extra spacing between cards
-      borderWidth: 1,
-      borderColor: pressed ? '#EF4444' : '#333', // 🔴 Red border on press
-      transform: [{ scale: pressed ? 0.98 : 1 }],
-    })}
-  >
-    {/* Top: Flag + Round */}
-    <View style={[commonStyles.row, { justifyContent: 'space-between', marginBottom: 12 }]}>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        {renderFlag(race.country)}
-        <View style={{ marginLeft: 8 }}>
-          <Text style={{ fontWeight: '700', fontSize: 15, color: colors.text }}>
-            {race.name}
-          </Text>
-          <Text style={styles.cardSub}>{race.location}</Text>
-        </View>
-      </View>
-      <View
-        style={{
-          backgroundColor: getRoundPillColor(race.round ?? 0),
-          paddingHorizontal: 10,
-          paddingVertical: 4,
-          borderRadius: 999,
-        }}
-      >
-        <Text style={{ fontSize: 12, color: getRoundPillTextColor(race.round ?? 0), fontWeight: '600' }}>
-          Round {race.round ?? '?'}
-        </Text>
-      </View>
-    </View>
+                  <Pressable
+                    key={`${race.id}-${race.name}`}
+                    onPress={() => setSelectedRace(race)}
+                    style={({ pressed }) => ({
+                      backgroundColor: '#101624',
+                      borderRadius: 16,
+                      padding: 16,
+                      marginBottom: 16, // ⬅️ Extra spacing between cards
+                      borderWidth: 1,
+                      borderColor: pressed ? '#EF4444' : '#333', // 🔴 Red border on press
+                      transform: [{ scale: pressed ? 0.98 : 1 }],
+                    })}
+                  >
+                    {/* Top: Flag + Round */}
+                    <View style={[commonStyles.row, { justifyContent: 'space-between', marginBottom: 12 }]}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        {renderFlag(race.country)}
+                        <View style={{ marginLeft: 8 }}>
+                          <Text style={{ fontWeight: '700', fontSize: 15, color: colors.text }}>
+                            {race.name}
+                          </Text>
+                          <Text style={styles.cardSub}>{race.location}</Text>
+                        </View>
+                      </View>
+                      <View
+                        style={{
+                          backgroundColor: getRoundPillColor(race.round ?? 0),
+                          paddingHorizontal: 10,
+                          paddingVertical: 4,
+                          borderRadius: 999,
+                        }}
+                      >
+                        <Text style={{ fontSize: 12, color: getRoundPillTextColor(race.round ?? 0), fontWeight: '600' }}>
+                          Round {race.round ?? '?'}
+                        </Text>
+                      </View>
+                    </View>
 
-    {/* Date + Status */}
-    <View style={[commonStyles.row, { justifyContent: 'space-between', marginBottom: 12 }]}>
-      <View style={commonStyles.row}>
-        <Feather name="calendar" size={17} color="#4d5361" marginRight={6} />
-        <Text style={[commonStyles.textSecondary]}>{formatDate(race.date)}</Text>
-      </View>
-      <View
-        style={{
-          backgroundColor: '#1D3B2A',
-          paddingHorizontal: 10,
-          paddingVertical: 4,
-          borderRadius: 999,
-          flexDirection: 'row',
-          alignItems: 'center',
-        }}
-      >
-        <Feather name="flag" size={14} color="#4ADE80" marginRight={4} />
-        <Text style={{ color: '#4ADE80', fontSize: 12, fontWeight: '600' }}>COMPLETED</Text>
-      </View>
-    </View>
+                    {/* Date + Status */}
+                    <View style={[commonStyles.row, { justifyContent: 'space-between', marginBottom: 12 }]}>
+                      <View style={commonStyles.row}>
+                        <Feather name="calendar" size={17} color="#4d5361" marginRight={6} />
+                        <Text style={[commonStyles.textSecondary]}>{formatDate(race.date)}</Text>
+                      </View>
+                      <View
+                  style={{
+                    backgroundColor:
+                  getRaceStatus(race.date) === 'completed'
+                    ? '#1D3B2A' // COMPLETED: dark green
+                    : getRaceStatus(race.date) === 'live'
+                    ? '#FF6B6B' // LIVE: light red
+                    : '#192949', // UPCOMING: dark blue
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                    borderRadius: 999,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}
+                >
+                  {getRaceStatus(race.date) === 'completed' && (
+                    <Feather name="flag" size={14} color="#4ADE80" style={{ marginRight: 4 }} />
+                  )}
+                  {getRaceStatus(race.date) === 'upcoming' && (
+                    <MaterialIcons name="access-time" size={17} color="#80a8d9" style={{ marginRight: 4 }} />
+                  )}
+                  {getRaceStatus(race.date) === 'live' && (
+                    <Octicons name="broadcast" size={17} color="#FF0000" style={{ marginRight: 4 }} />
+                  )}
+                  <Text
+                    style={{
+                      color:
+                        getRaceStatus(race.date) === 'upcoming'
+                          ? '#80a8d9'
+                          : getRaceStatus(race.date) === 'live'
+                          ? '#FF0000'
+                          : '#4ADE80',
+                      fontSize: 12,
+                      fontWeight: '600',
+                    }}
+                  >
+                    {getRaceStatus(race.date).toUpperCase()}
+                  </Text>
+                </View>
+                    </View>
 
-    {/* Winner */}
-    {race.winner ? (
-  <View style={{ marginTop: 6 }}>
-    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-      <Ionicons name="medal-outline" size={17} color="#facc15" />
-      <Text
-        style={{
-          fontWeight: '600',
-          color: colors.text,
-          marginLeft: 8, // 🔁 Aligned with icon
-        }}
-      >
-        {race.winner}
-      </Text>
-    </View>
-    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      <Feather name="users" size={17} color="#4d5361" />
-      <Text
-        style={{
-          fontSize: 13,
-          color: 'white',
-          marginLeft: 8, // 🔁 Aligned with icon
-        }}
-      >
-        {race.winnerTeam ?? 'Unknown Team'}
-      </Text>
-    </View>
-  </View>
-) : (
-  <Text style={{ fontSize: 13, fontStyle: 'italic', color: colors.grey }}>
-    Results pending
-  </Text>
-)}
-  </Pressable>
-))
+                    {/* Winner */}
+                    {race.winner ? (
+                  <View style={{ marginTop: 6 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                      <Ionicons name="medal-outline" size={17} color="#facc15" />
+                      <Text
+                        style={{
+                          fontWeight: '600',
+                          color: colors.text,
+                          marginLeft: 8, // 🔁 Aligned with icon
+                        }}
+                      >
+                        {race.winner}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Feather name="users" size={17} color="#4d5361" />
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          color: 'white',
+                          marginLeft: 8, // 🔁 Aligned with icon
+                        }}
+                      >
+                        {race.winnerTeam ?? 'Unknown Team'}
+                      </Text>
+                    </View>
+                  </View>
+                ) : (
+                  <Text style={{ fontSize: 13, fontStyle: 'italic', color: colors.grey }}>
+                    Results pending
+                  </Text>
+                )}
+                  </Pressable>
+                ))
 
 
                 )}
@@ -322,5 +374,6 @@ const getRoundPillTextColor = (round: number) => {
         )}
       </View>
     </View>
+    </LinearGradient>
   );
 }

@@ -55,7 +55,7 @@ export const commonStyles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    //backgroundColor: '#0e1232',
     width: '100%',
     height: '100%',
   },

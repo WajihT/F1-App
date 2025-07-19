@@ -8,6 +8,8 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { LinearGradient } from 'expo-linear-gradient';
+
 
 
 export default function StandingsScreen() {
@@ -86,6 +88,13 @@ export default function StandingsScreen() {
 
 
   return (
+    <LinearGradient
+  colors={['#090710', '#030610', '#0c060b', '#090710']}
+  locations={[0, 0.15, 0.6, 1]}
+  start={{ x: 0.5, y: 0 }}
+  end={{ x: 0.5, y: 1 }}
+  style={{ flex: 1 }}
+>
     <View style={commonStyles.container}>
       <View style={commonStyles.header}>
         <Text style={commonStyles.headerTitle}>Championship Standings</Text>
@@ -319,5 +328,6 @@ export default function StandingsScreen() {
         )}
       </View>
     </View>
+    </LinearGradient>
   );
 }

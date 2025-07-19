@@ -4,6 +4,8 @@ import { useLocalSearchParams } from 'expo-router';
 import { F1DataService } from '../services/f1DataService';
 import { commonStyles, colors } from '../styles/commonStyles';
 import Icon from '../components/Icon';
+import { LinearGradient } from 'expo-linear-gradient';
+
 
 const styles = StyleSheet.create({
   sectionCard: {
@@ -68,6 +70,13 @@ export default function RaceDetailScreen() {
     raceResults.find((r) => r.FastestLap?.rank === '1')?.FastestLap?.Time?.time || 'N/A';
 
   return (
+    <LinearGradient
+  colors={['#090710', '#030610', '#0c060b', '#090710']}
+  locations={[0, 0.15, 0.6, 1]}
+  start={{ x: 0.5, y: 0 }}
+  end={{ x: 0.5, y: 1 }}
+  style={{ flex: 1 }}
+>
     <ScrollView style={commonStyles.container} contentContainerStyle={{ padding: 16 }}>
       <Text style={commonStyles.headerTitle}>{raceName}</Text>
 
@@ -108,5 +117,6 @@ export default function RaceDetailScreen() {
         </>
       )}
     </ScrollView>
+    </LinearGradient>
   );
 }

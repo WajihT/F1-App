@@ -7,6 +7,8 @@ import { F1DataService, Driver, Constructor, Race } from '../services/f1DataServ
 import { Animated } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import TireIcon from "../assets/TireIcon"; 
+import { LinearGradient } from 'expo-linear-gradient';
+
 
 export default function HomeScreen() {
   const [selectedSeason, setSelectedSeason] = useState(new Date().getFullYear());
@@ -115,6 +117,13 @@ export default function HomeScreen() {
   ];
 
   return (
+    <LinearGradient
+      colors={['#090710', '#030610', '#0c060b', '#090710']}
+      locations={[0, 0.15, 0.6, 1]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
+      style={{ flex: 1 }}
+    >
     <View style={commonStyles.container}>
       <View
   style={{
@@ -278,5 +287,6 @@ export default function HomeScreen() {
         )}
       </View>
     </View>
+    </LinearGradient>
   );
 }

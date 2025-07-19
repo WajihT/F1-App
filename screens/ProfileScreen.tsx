@@ -5,6 +5,8 @@ import Button from '../components/Button';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { LinearGradient } from 'expo-linear-gradient';
+
 
 const defaultUserStats = {
   name: 'F1 Fan',
@@ -77,6 +79,13 @@ export default function ProfileScreen() {
   ]
 
   return (
+    <LinearGradient
+  colors={['#090710', '#030610', '#0c060b', '#090710']}
+  locations={[0, 0.15, 0.6, 1]}
+  start={{ x: 0.5, y: 0 }}
+  end={{ x: 0.5, y: 1 }}
+  style={{ flex: 1 }}
+>
     <View style={commonStyles.container}>
       <View style={commonStyles.header}>
         <Text style={commonStyles.headerTitle}>Profile</Text>
@@ -291,5 +300,6 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
     </View>
+    </LinearGradient>
   );
 }
