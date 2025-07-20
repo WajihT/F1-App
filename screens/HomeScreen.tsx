@@ -130,6 +130,7 @@ export default function HomeScreen() {
     alignItems: 'center',        // 🔴 Center horizontally
     justifyContent: 'center',    // 🔴 Center vertically (optional)
     marginBottom: 16,
+    marginTop: 5,
   }}
 >
   <TouchableOpacity
@@ -139,7 +140,7 @@ export default function HomeScreen() {
       gap: 8,
     }}
   >
-    <View style={{ position: 'relative', marginRight: 8 }}>
+    <View style={{ position: 'relative', marginRight: 5 }}>
       <Animated.View
         style={{
           position: 'absolute',
@@ -183,7 +184,7 @@ export default function HomeScreen() {
             </Text>
           </View>
         ) : (
-          <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+          <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }} bounces={true} overScrollMode="always">
             {/* Next Race Card */}
             {nextRace && (
               <View style={commonStyles.section}>

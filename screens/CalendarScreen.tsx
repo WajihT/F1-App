@@ -20,6 +20,10 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Octicons from '@expo/vector-icons/Octicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Animated } from 'react-native'; 
+import React from 'react';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import { fetchRace, fetchRaceResults } from '@/lib/api';
+import TireIcon from "../assets/TireIcon"; 
 
 
 const styles = StyleSheet.create({
@@ -60,45 +64,115 @@ flagImage: {
   },
 });
 
+const raceTabs = [
+  { key: 'results', label: 'Results', icon: <Feather name="users" size={18} /> },
+  { key: 'positions', label: 'Positions', icon: <Feather name="map-pin" size={18} /> },
+  { key: 'strategy', label: 'Strategy', icon: <Feather name="flag" size={18} /> },
+  { key: 'laptimes', label: 'Lap Times', icon: <Feather name="clock" size={18} /> },
+  { key: 'circuit', label: 'Track Dominance', icon: <Feather name="map" size={18} /> },
+  { key: 'telemetry', label: 'Telemetry', icon: <Feather name="bar-chart-2" size={18} /> },
+];
+
 export default function CalendarScreen() {
   const [selectedSeason, setSelectedSeason] = useState(new Date().getFullYear());
   const [races, setRaces] = useState<Race[]>([]);
   const [raceResults, setRaceResults] = useState<RaceResults[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
+  const [activeRaceTab, setActiveRaceTab] = useState('results');
+  const [activeSession, setActiveSession] = useState('R');
 
   const f1Service = F1DataService.getInstance();
-
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     loadRaceCalendar();
   }, [selectedSeason]);
 
-  const loadRaceCalendar = async () => {
+const loadRaceCalendar = async () => {
+  setLoading(true);
+  try {
+    // Get schedule (raceData) and results (seasonResults)
+    const raceData = await f1Service.fetchRaceCalendar(selectedSeason);
+    const seasonResults = await f1Service.fetchSeasonRaces(selectedSeason);
+
+    //console.log(seasonResults);
+
+    // Merge winner and winnerTeam into raceData
+    const mergedRaces = raceData.map(race => {
+      const result = seasonResults.find(
+        res => res.name === race.name || res.round === race.round
+      );
+      return {
+        ...race,
+        winner: result?.winner,
+        winnerTeam: result?.winnerTeam,
+      };
+    });
+
+    setRaces(mergedRaces);
+  } catch (error) {
+    console.error('Error loading race calendar:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  const fetchSelectedRaceResults = async () => {
+    if (!selectedRace) return;
     setLoading(true);
     try {
-      const raceData = await f1Service.fetchRaceCalendar(selectedSeason);
-      const resultsData = await f1Service.fetchRaceResults(selectedSeason);
-      const racesWithWinner = raceData.map((race: Race) => {
-        const result = resultsData.find((r: RaceResults) => r.round === race.round);
-        const winner = result ? result.driver : undefined;
-        const winnerTeam = result ? result.team : undefined;
-        const winnerTeamColor = result ? result.teamColor : undefined;
-        return { ...race, winner, winnerTeam, winnerTeamColor };
-      });
-      setRaces(racesWithWinner);
-      setRaceResults(resultsData);
+      const eventSlug = selectedRace.name.toLowerCase().replace(/ /g, '_');
+      const data = await f1Service.fetchRaceResults(selectedSeason, eventSlug, activeSession);
+      setRaceResults(data);
     } catch (error) {
-      console.error('Error loading race calendar:', error);
+      console.error('Error fetching detailed race results:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  fetchSelectedRaceResults();
+}, [selectedRace, activeSession, selectedSeason]);
+
   const handleSeasonChange = (season: number) => {
     setSelectedSeason(season);
   };
+
+  const handleSessionChange = (session: string) => {
+    setActiveSession(session);
+  };
+
+function InfoCardPlaceholder({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <View
+      style={{
+        backgroundColor: '#18181b',
+        borderRadius: 16,
+        padding: 18,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 4,
+        borderWidth: 1,
+        borderColor: '#232a3a',
+        opacity: 0.7,
+      }}
+    >
+      <View>
+        <Text style={{ color: '#9ca3af', fontSize: 13, fontWeight: '500', marginBottom: 6 }}>
+          {label}
+        </Text>
+        <View style={{ width: 80, height: 18, backgroundColor: '#232a3a', borderRadius: 8, marginBottom: 4 }} />
+        <View style={{ width: 50, height: 14, backgroundColor: '#232a3a', borderRadius: 8 }} />
+      </View>
+      <View style={{ opacity: 0.5 }}>
+        {icon}
+      </View>
+    </View>
+  );
+}
 
   const getRaceStatus = (raceDate: string) => {
   const now = new Date();
@@ -115,6 +189,30 @@ export default function CalendarScreen() {
     return 'upcoming';
   }
 }
+
+  const getWinnerDriver = () => {
+    return raceResults.length > 0 ? raceResults[0]?.fullName ?? 'TBD' : 'TBD';
+  };
+
+  const getWinnerTeam = () => {
+    return raceResults.length > 0 ? raceResults[0]?.team ?? null : null;
+  };
+
+  const getPoleDriver = () => {
+    return raceResults.length > 0 ? raceResults[0]?.fullName ?? 'TBD' : 'TBD';
+  };
+
+  const getPoleTime = () => {
+    return raceResults.length > 0 ? raceResults[0]?.poleLapTimeValue ?? null : null;
+  };
+
+  const getFastestDriver = () => {
+    return raceResults.find((r) => r.isFastestLap)?.fullName ?? 'TBD';
+  };
+
+  const getFastestTime = () => {
+    return raceResults.find((r) => r.isFastestLap)?.fastestLapTimeValue ?? null;
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -212,22 +310,29 @@ const getRoundPillTextColor = (round: number) => {
 
   return (
 <LinearGradient
-  colors={['#090710', '#030610', '#0c060b', '#090710']}
-  locations={[0, 0.15, 0.6, 1]}
-  start={{ x: 0.5, y: 0 }}
-  end={{ x: 0.5, y: 1 }}
-  style={{ flex: 1 }}
+      colors={['#090710', '#030610', '#0c060b', '#090710']}
+      locations={[0, 0.15, 0.6, 1]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
+      style={{ flex: 1 }}
+    >
+    <View style={commonStyles.container}>
+      <View
+  style={{
+    alignItems: 'center',        // 🔴 Center horizontally
+    justifyContent: 'center',    // 🔴 Center vertically (optional)
+    marginBottom: 16,
+    marginTop: 5,
+  }}
 >
-      <View style={commonStyles.container}>
   <TouchableOpacity
     style={{
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
-      alignSelf: 'center',
     }}
   >
-    <View style={{ position: 'relative', marginRight: 8 }}>
+    <View style={{ position: 'relative', marginRight: 5 }}>
       <Animated.View
         style={{
           position: 'absolute',
@@ -240,6 +345,7 @@ const getRoundPillTextColor = (round: number) => {
           transform: [{ scale: pulseAnim }],
         }}
       />
+      <TireIcon width={28} height={28} fill="#ef4444" />
     </View>
 
     <Text
@@ -253,11 +359,13 @@ const getRoundPillTextColor = (round: number) => {
       Race <Text style={{ color: '#ef4444' }}>Calendar</Text> <Text style={{ color: '#80a8d9' }}>& Results</Text>
     </Text>
   </TouchableOpacity>
+</View>
 
       <View style={commonStyles.content}>
         <SeasonSelector selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
 
-{loading ? (
+{!selectedRace && loading ? (
+  // Calendar loading state
   <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
     {[...Array(5)].map((_, idx) => (
       <RaceCardPlaceholder key={idx} />
@@ -265,43 +373,364 @@ const getRoundPillTextColor = (round: number) => {
   </ScrollView>
 ) : (
           <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
-            {selectedRace ? (
-              <View style={commonStyles.section}>
-                <Text style={commonStyles.headerTitle}>{selectedRace.name}</Text>
-                <Text style={[commonStyles.text, { marginBottom: 8 }]}>
-                  📍 {selectedRace.location}, {selectedRace.country}
+{selectedRace ? (
+  <View style={commonStyles.section}>
+    {/* Title & Season */}
+    <Text style={[commonStyles.headerTitle, { fontSize: 28, fontWeight: 'bold', marginBottom: 2 }]}>
+      {selectedRace.name}
+    </Text>
+<Text
+  style={{
+    color: '#9ca3af',
+    fontSize: 16,
+    marginBottom: 12,
+    textAlign: 'center',
+    fontWeight: '500',
+  }}
+>
+  {selectedSeason} Season
+</Text>
+
+    {/* Info Cards */}
+    <View style={{ gap: 12, marginBottom: 18 }}>
+      {loading ? (
+        <>
+          <InfoCardPlaceholder icon={<Ionicons name="trophy-outline" size={22} color="#f87171" />} label="Race Winner" />
+          <InfoCardPlaceholder icon={<Feather name="zap" size={22} color="#80a8d9" />} label="Pole Position" />
+          <InfoCardPlaceholder icon={<Feather name="clock" size={22} color="#80a8d9" />} label="Fastest Lap" />
+        </>
+      ) : (
+        <>
+          {/* Winner */}
+          <View style={{
+            backgroundColor: '#18181b',
+            borderRadius: 16,
+            padding: 18,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 4,
+            borderWidth: 1,
+            borderColor: '#232a3a',
+          }}>
+            <View>
+              <Text style={{ color: '#9ca3af', fontSize: 13, fontWeight: '500', marginBottom: 2 }}>
+                Race Winner
+              </Text>
+              <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>
+                {getWinnerDriver()}
+              </Text>
+              {getWinnerTeam() && (
+                <Text style={{ color: '#9ca3af', fontSize: 14 }}>
+                  {getWinnerTeam()}
                 </Text>
-                <Feather name="calendar" size={24} color="#4d5361" />
-                <Text style={commonStyles.textSecondary}>
-                  {formatDate(selectedRace.date)}
+              )}
+            </View>
+            <Ionicons name="trophy-outline" size={22} color="#f87171" />
+          </View>
+          {/* Pole Position */}
+          <View style={{
+            backgroundColor: '#18181b',
+            borderRadius: 16,
+            padding: 18,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 4,
+            borderWidth: 1,
+            borderColor: '#232a3a',
+          }}>
+            <View>
+              <Text style={{ color: '#9ca3af', fontSize: 13, fontWeight: '500', marginBottom: 2 }}>
+                Pole Position
+              </Text>
+              <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>
+                {getPoleDriver() ?? getPoleTime() ?? 'TBD'}
+              </Text>
+              {getPoleTime() && (
+                <Text style={{ color: '#9ca3af', fontSize: 14 }}>
+                  {getPoleTime()}
                 </Text>
-                {selectedRace.winner && (
-                  <Text style={[commonStyles.text, { marginTop: 12 }]}>
-                    🏆 Winner: {selectedRace.winner}
-                  </Text>
-                )}
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: colors.primary,
-                    paddingVertical: 10,
-                    paddingHorizontal: 16,
-                    borderRadius: 8,
-                    alignItems: 'center',
-                    marginTop: 24,
-                  }}
-                  onPress={() => setSelectedRace(null)}
-                >
-                  <Text
-                    style={{
-                      color: colors.background,
-                      fontSize: 16,
-                      fontWeight: '600',
-                    }}
-                  >
-                    ← Back to Calendar
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              )}
+            </View>
+            <Feather name="zap" size={22} color="#80a8d9" />
+          </View>
+          {/* Fastest Lap */}
+          <View style={{
+            backgroundColor: '#18181b',
+            borderRadius: 16,
+            padding: 18,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 4,
+            borderWidth: 1,
+            borderColor: '#232a3a',
+          }}>
+            <View>
+              <Text style={{ color: '#9ca3af', fontSize: 13, fontWeight: '500', marginBottom: 2 }}>
+                Fastest Lap
+              </Text>
+              <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>
+                {getFastestDriver() ?? getFastestTime() ?? 'TBD'}
+              </Text>
+              {getFastestTime() && (
+                <Text style={{ color: '#9ca3af', fontSize: 14 }}>
+                  {getFastestTime()}
+                </Text>
+              )}
+            </View>
+            <Feather name="clock" size={22} color="#80a8d9" />
+          </View>
+        </>
+      )}
+    </View>
+
+    {/* Segmented Tab Bar */}
+<View
+  style={{
+    backgroundColor: '#18181b',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#232a3a',
+    padding: 10,
+    marginBottom: 18,
+    width: '100%',
+    alignSelf: 'center',
+  }}
+>
+  {/* Row 1: 3 Tabs */}
+  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
+    {raceTabs.slice(0, 3).map((tab) => (
+      <TouchableOpacity
+        key={tab.key}
+        onPress={() => setActiveRaceTab(tab.key)}
+        style={{
+          backgroundColor: activeRaceTab === tab.key ? colors.primary : '#232a3a',
+          borderRadius: 8,
+          paddingVertical: 10,
+          paddingHorizontal: 12,
+          flexGrow: 1,
+          flexBasis: 0,
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginHorizontal: 4,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {React.cloneElement(tab.icon, {
+            color: activeRaceTab === tab.key ? '#fff' : '#9ca3af',
+            style: { marginRight: 6 },
+          })}
+          <Text
+            style={{
+              color: activeRaceTab === tab.key ? '#fff' : '#9ca3af',
+              fontWeight: 'bold',
+              fontSize: 15,
+            }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {tab.label}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    ))}
+  </View>
+
+  {/* Row 2: 2 Tabs */}
+  <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginBottom: 10 }}>
+    {raceTabs.slice(3, 5).map((tab) => (
+      <TouchableOpacity
+        key={tab.key}
+        onPress={() => setActiveRaceTab(tab.key)}
+        style={{
+          backgroundColor: activeRaceTab === tab.key ? colors.primary : '#232a3a',
+          borderRadius: 8,
+          paddingVertical: 10,
+          paddingHorizontal: 14,
+          flexGrow: 1,
+          flexBasis: 0,
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginHorizontal: 4,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {React.cloneElement(tab.icon, {
+            color: activeRaceTab === tab.key ? '#fff' : '#9ca3af',
+            style: { marginRight: 6 },
+          })}
+          <Text
+            style={{
+              color: activeRaceTab === tab.key ? '#fff' : '#9ca3af',
+              fontWeight: 'bold',
+              fontSize: 15,
+            }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {tab.label}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    ))}
+  </View>
+
+  {/* Row 3: Single Centered Tab */}
+  <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+    {raceTabs.slice(5, 6).map((tab) => (
+      <TouchableOpacity
+        key={tab.key}
+        onPress={() => setActiveRaceTab(tab.key)}
+        style={{
+          backgroundColor: activeRaceTab === tab.key ? colors.primary : '#232a3a',
+          borderRadius: 8,
+          paddingVertical: 10,
+          paddingHorizontal: 16,
+          justifyContent: 'center',
+          alignItems: 'center',
+          flexGrow: 1,
+        flexBasis: 0,
+        marginHorizontal: 4,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {React.cloneElement(tab.icon, {
+            color: activeRaceTab === tab.key ? '#fff' : '#9ca3af',
+            style: { marginRight: 6 },
+          })}
+          <Text
+            style={{
+              color: activeRaceTab === tab.key ? '#fff' : '#9ca3af',
+              fontWeight: 'bold',
+              fontSize: 15,
+            }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {tab.label}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    ))}
+  </View>
+</View>
+
+
+{/* Tab Content */}
+<View style={{ marginBottom: 18 }}>
+{activeRaceTab === 'results' && (
+  <View style={{ paddingBottom: 16 }}>
+    {/* Header Row */}
+    <View style={{
+      flexDirection: 'row',
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      backgroundColor: '#18181b',
+      borderTopLeftRadius: 12,
+      borderTopRightRadius: 12,
+      borderBottomWidth: 1,
+      borderColor: '#232a3a',
+    }}>
+      {['Pos', 'Driver', 'Grid', 'Status', 'Pts'].map((label, idx) => (
+        <Text
+          key={idx}
+          style={{
+            flex: idx === 1 ? 2 : 1,
+            color: '#9ca3af',
+            fontSize: 13,
+            fontWeight: 'bold',
+          }}
+        >
+          {label}
+        </Text>
+      ))}
+    </View>
+
+    {/* Results Rows */}
+    {raceResults.map((result, index) => (
+      <View
+        key={index}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingVertical: 10,
+          paddingHorizontal: 12,
+          backgroundColor: index % 2 === 0 ? '#111827' : '#101624',
+          borderBottomWidth: 1,
+          borderColor: '#232a3a',
+        }}
+      >
+        {/* Position */}
+        <Text style={{ flex: 1, color: '#fff', fontSize: 14 }}>
+          {index + 1}
+        </Text>
+
+        {/* Driver */}
+        <Text style={{ flex: 2, color: '#fff', fontSize: 14 }}>
+          {result.fullName ?? 'Unknown'}
+        </Text>
+
+        {/* Grid */}
+        <Text style={{ flex: 1, color: '#fff', fontSize: 14 }}>
+          {result.gridPosition ?? '-'}
+        </Text>
+
+        {/* Status */}
+        <Text style={{ flex: 1, color: result.status?.toLowerCase().includes('dnf') ? '#f87171' : '#9ca3af', fontSize: 14 }}>
+          {result.resultStatus ?? 'N/A'}
+        </Text>
+
+        {/* Points */}
+        <Text style={{ flex: 1, color: '#ffffffff', fontSize: 14}}>
+          {result.points != null ? Math.round(result.points) : '0'}
+        </Text>
+      </View>
+    ))}
+  </View>
+)}
+  {activeRaceTab === 'positions' && (
+    <Text style={{ color: '#fff', fontSize: 16 }}>Positions content...</Text>
+  )}
+  {activeRaceTab === 'strategy' && (
+    <Text style={{ color: '#fff', fontSize: 16 }}>Strategy content...</Text>
+  )}
+  {activeRaceTab === 'laptimes' && (
+    <Text style={{ color: '#fff', fontSize: 16 }}>Lap Times content...</Text>
+  )}
+  {activeRaceTab === 'circuit' && (
+    <Text style={{ color: '#fff', fontSize: 16 }}>Track Dominance content...</Text>
+  )}
+  {activeRaceTab === 'telemetry' && (
+    <Text style={{ color: '#fff', fontSize: 16 }}>Telemetry content...</Text>
+  )}
+</View>
+
+{/* Back Button */}
+<TouchableOpacity
+  style={{
+    backgroundColor: colors.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  }}
+  onPress={() => { setSelectedRace(null) }}
+>
+  <Text
+    style={{
+      color: colors.background,
+      fontSize: 16,
+      fontWeight: '600',
+    }}
+  >
+    ← Back to Calendar
+  </Text>
+</TouchableOpacity>
+
+  </View>
             ) : (
               <View style={commonStyles.section}>
                 <Text
@@ -326,7 +755,7 @@ const getRoundPillTextColor = (round: number) => {
                   races.map((race) => (
                   <Pressable
                     key={`${race.id}-${race.name}`}
-                    onPress={() => setSelectedRace(race)}
+                    onPress={() => { setRaceResults([]); setLoading(true); setSelectedRace(race); }}
                     style={({ pressed }) => ({
                       backgroundColor: '#101624',
                       borderRadius: 16,
@@ -433,7 +862,7 @@ const getRoundPillTextColor = (round: number) => {
                           marginLeft: 8, // 🔁 Aligned with icon
                         }}
                       >
-                        {race.winnerTeam ?? 'Unknown Team'}
+                        {race.winnerTeam}
                       </Text>
                     </View>
                   </View>

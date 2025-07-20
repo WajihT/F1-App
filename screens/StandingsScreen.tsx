@@ -10,6 +10,7 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Animated } from 'react-native'; 
+import TireIcon from "../assets/TireIcon"; 
 
 
 
@@ -181,22 +182,29 @@ function ConstructorCardPlaceholder({ position }: { position: number }) {
 
   return (
     <LinearGradient
-  colors={['#090710', '#030610', '#0c060b', '#090710']}
-  locations={[0, 0.15, 0.6, 1]}
-  start={{ x: 0.5, y: 0 }}
-  end={{ x: 0.5, y: 1 }}
-  style={{ flex: 1 }}
->
+      colors={['#090710', '#030610', '#0c060b', '#090710']}
+      locations={[0, 0.15, 0.6, 1]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
+      style={{ flex: 1 }}
+    >
     <View style={commonStyles.container}>
+      <View
+  style={{
+    alignItems: 'center',        // 🔴 Center horizontally
+    justifyContent: 'center',    // 🔴 Center vertically (optional)
+    marginBottom: 16,
+    marginTop: 5,
+  }}
+>
   <TouchableOpacity
     style={{
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
-      alignSelf: 'center',
     }}
   >
-    <View style={{ position: 'relative', marginRight: 8 }}>
+    <View style={{ position: 'relative', marginRight: 5 }}>
       <Animated.View
         style={{
           position: 'absolute',
@@ -209,6 +217,7 @@ function ConstructorCardPlaceholder({ position }: { position: number }) {
           transform: [{ scale: pulseAnim }],
         }}
       />
+      <TireIcon width={28} height={28} fill="#ef4444" />
     </View>
 
     <Text
@@ -222,6 +231,7 @@ function ConstructorCardPlaceholder({ position }: { position: number }) {
       Championship <Text style={{ color: '#ef4444' }}>Standings</Text>
     </Text>
   </TouchableOpacity>
+</View>
 
       <View style={commonStyles.content}>
         <SeasonSelector

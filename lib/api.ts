@@ -1,4 +1,5 @@
 const API_BASE_URL = 'https://f1analytics-be-production.up.railway.app'; //Use this for prod: https://f1analytics-be-production.up.railway.app FastAPI backend URL 
+// Use this for dev: http://192.168.0.186:8000
 
 export async function fetchDriverStandings(year: number) {
   const response = await fetch(`${API_BASE_URL}/api/standings/drivers?year=${year}`);
@@ -12,14 +13,14 @@ export async function fetchConstructorStandings(year: number) {
   return await response.json();
 }
 
-export async function fetchRaceResults(year: number) {
-  const response = await fetch(`${API_BASE_URL}/api/results/races?year=${year}`);
+export async function fetchRaceResults(year: number, event: string, session: string) {
+  const response = await fetch(`${API_BASE_URL}/api/results/race/${year}/${event}?session=${session}`);
   if (!response.ok) throw new Error('Failed to fetch race results');
   return await response.json();
 }
 
-export async function fetchSpecificRaceResults(year: number, eventSlug: string, session: string) {
-  const response = await fetch(`${API_BASE_URL}/api/results/race/${year}/${eventSlug}?session=${session}`);
+export async function fetchRace(year: number) {
+  const response = await fetch(`${API_BASE_URL}/api/results/races?year=${year}`);
   if (!response.ok) throw new Error('Failed to fetch specific race results');
   return await response.json();
 }

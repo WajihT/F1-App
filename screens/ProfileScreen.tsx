@@ -3,9 +3,11 @@ import { commonStyles, colors } from '../styles/commonStyles';
 import Icon from '../components/Icon';
 import Button from '../components/Button';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
+import TireIcon from "../assets/TireIcon";
+import { Animated } from 'react-native';
 
 
 const defaultUserStats = {
@@ -31,6 +33,8 @@ export default function ProfileScreen() {
   const [editing, setEditing] = useState(false);
   const [editedStats, setEditedStats] = useState(defaultUserStats);
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     loadStats();
@@ -79,17 +83,57 @@ export default function ProfileScreen() {
   ]
 
   return (
-    <LinearGradient
-  colors={['#090710', '#030610', '#0c060b', '#090710']}
-  locations={[0, 0.15, 0.6, 1]}
-  start={{ x: 0.5, y: 0 }}
-  end={{ x: 0.5, y: 1 }}
-  style={{ flex: 1 }}
->
+<LinearGradient
+      colors={['#090710', '#030610', '#0c060b', '#090710']}
+      locations={[0, 0.15, 0.6, 1]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
+      style={{ flex: 1 }}
+    >
     <View style={commonStyles.container}>
-      <View style={commonStyles.header}>
-        <Text style={commonStyles.headerTitle}>Profile</Text>
-      </View>
+      <View
+  style={{
+    alignItems: 'center',        // 🔴 Center horizontally
+    justifyContent: 'center',    // 🔴 Center vertically (optional)
+    marginBottom: 16,
+    marginTop: 5,
+  }}
+>
+  <TouchableOpacity
+    style={{
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    }}
+  >
+    <View style={{ position: 'relative', marginRight: 5 }}>
+      <Animated.View
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderRadius: 999,
+          backgroundColor: 'rgba(239,68,68,0.2)',
+          transform: [{ scale: pulseAnim }],
+        }}
+      />
+      <TireIcon width={28} height={28} fill="#ef4444" />
+    </View>
+
+    <Text
+      style={{
+        fontWeight: 'bold',
+        fontSize: 24,
+        color: '#fff',
+        letterSpacing: -1,
+      }}
+    >
+      <Text>Profile</Text>
+    </Text>
+  </TouchableOpacity>
+</View>
 
       <ScrollView style={commonStyles.content} showsVerticalScrollIndicator={false}>
         {/* User Info Card */}

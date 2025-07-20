@@ -30,15 +30,55 @@ export interface Race {
   round?: number;
   circuit?: string;
   winnerTeam?: string;
+
+  // Detailed result fields
+  position?: number | null;
+  driverCode?: string;
+  fullName?: string;
+  team?: string;
+  points?: number;
+  resultStatus?: string; // renamed to avoid clash with 'status'
+  gridPosition?: number | null;
+  teamColor?: string;
+  isFastestLap?: boolean;
+  fastestLapTime?: string | null;
+  lapsCompleted?: number | null;
+  q1Time?: string | null;
+  q2Time?: string | null;
+  q3Time?: string | null;
+  poleLapTimeValue?: string | null;
+  fastestLapTimeValue?: string | null;
 }
 
 export interface RaceResults {
-  year: number; 
-  event: string; 
-  round: number; 
-  driver: string; 
-  team: string; 
-  teamColor: string;
+  id: number;
+  name: string;
+  location: string;
+  country: string;
+  date: string;
+  status: 'completed' | 'upcoming' | 'live';
+  winner?: string;
+  round?: number;
+  circuit?: string;
+  winnerTeam?: string;
+
+  // Detailed result fields
+  position?: number | null;
+  driverCode?: string;
+  fullName?: string;
+  team?: string;
+  points?: number;
+  resultStatus?: string; // renamed to avoid clash with 'status'
+  gridPosition?: number | null;
+  teamColor?: string;
+  isFastestLap?: boolean;
+  fastestLapTime?: string | null;
+  lapsCompleted?: number | null;
+  q1Time?: string | null;
+  q2Time?: string | null;
+  q3Time?: string | null;
+  poleLapTimeValue?: string | null;
+  fastestLapTimeValue?: string | null;
 }
 
 export interface Season {
@@ -52,6 +92,7 @@ import {
   fetchRaceResults,
   fetchSchedule,
   fetchAvailableSessions,
+  fetchRace
 } from '../lib/api';
 
 // Available seasons from 1950 to current year
@@ -183,22 +224,60 @@ async fetchRaceCalendar(season: number): Promise<Race[]> {
   }
 }
 
-  async fetchRaceResults(season: number): Promise<any> {
-      try {
-    const results = await fetchRaceResults(season);
+async fetchSeasonRaces(season: number): Promise<Race[]> {
+  try {
+    const results = await fetchRace(season);
+    //console.log("RAW API results:", results);
     return results.map((result: any, idx: number) => ({
-      year: result.year,
-      event: result.event,
+      id: result.round ?? idx + 1,
+      name: result.event,
+      location: undefined, // Not provided by API
+      country: undefined,  // Not provided by API
+      date: undefined,     // Not provided by API
+      status: 'completed', // Or use your own logic if available
+      winner: result.driver,
+      winnerTeam: result.team,
       round: result.round,
-      driver: result.driver,
-      team: result.team,
+      circuit: undefined,  // Not provided by API
       teamColor: result.teamColor,
+      year: result.year,
     }));
   } catch (error) {
-    console.error('Error fetching race results:', error);
+    console.error('Error fetching season races:', error);
+    return [];
+  }
+}
+
+
+async fetchRaceResults(season: number, event: string, session: string): Promise<Race[]> {
+  try {
+    const results = await fetchRaceResults(season, event, session);
+    //console.log("fetch race results in dataservice:",results);
+
+    return results.map((result: any, idx: number) => ({
+      id: result.round ?? idx + 1,
+      name: result.event,
+      round: result.round,
+      country: result.country,
+      location: result.location,
+      date: result.date,
+      status: 'completed', // You can dynamically set this if needed
+      driverCode: result.driverCode,
+      fullName: result.fullName,
+      team: result.team,
+      teamColor: result.teamColor,
+      points: result.points,
+      resultStatus: result.status,
+      gridPosition: result.gridPosition,
+      isFastestLap: result.isFastestLap,
+      fastestLapTimeValue: result.fastestLapTimeValue,
+      poleLapTimeValue: result.poleLapTimeValue,
+    }));
+  } catch (error) {
+    console.error('Error fetching detailed race results:', error);
     return this.getFallbackRaceResults();
   }
-  }
+}
 
   // Fallback data for when API is unavailable
   private getFallbackDriverStandings(): Driver[] {
