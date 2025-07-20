@@ -95,6 +95,26 @@ export default function HomeScreen() {
     }
   };
 
+function CardPlaceholder({ height = 80, style = {} }) {
+  return (
+    <View
+      style={{
+        borderRadius: 12,
+        marginBottom: 16,
+        padding: 16,
+        borderWidth: 1,
+        opacity: 0.6,
+        minHeight: height,
+        justifyContent: 'center',
+        ...style,
+      }}
+    >
+      <View style={{ width: '50%', height: 16, backgroundColor: '#303030', borderRadius: 6, marginBottom: 6 }} />
+      <View style={{ width: '30%', height: 12, backgroundColor: '#303030', borderRadius: 6 }} />
+    </View>
+  );
+}
+
   const latestNews = [
     {
       id: 1,
@@ -176,14 +196,25 @@ export default function HomeScreen() {
           onSeasonChange={handleSeasonChange}
         />
 
-        {loading ? (
-          <View style={[commonStyles.centerContent, { flex: 1 }]}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[commonStyles.text, { marginTop: 16, textAlign: 'center' }]}>
-              Loading {selectedSeason} season data...
-            </Text>
-          </View>
-        ) : (
+{loading ? (
+  <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+    {/* Next Race Placeholder */}
+    <View style={commonStyles.section}>
+      <CardPlaceholder height={110} style={{ backgroundColor: '#7d272b', borderColor: '#cc3b3c' }} />
+    </View>
+    {/* Quick Stats Placeholders */}
+    <View style={[commonStyles.section, { flexDirection: 'row' }]}>
+      <CardPlaceholder height={90} style={{ flex: 1, marginRight: 8, backgroundColor: '#1c1c14', borderColor: '#b09114' }} />
+      <CardPlaceholder height={90} style={{ flex: 1, marginLeft: 8, backgroundColor: '#1c1c14', borderColor: '#b09114' }} />
+    </View>
+    {/* Latest News Placeholders */}
+    <View style={commonStyles.section}>
+      <CardPlaceholder height={80} style={{ backgroundColor: '#1c1c1c', borderColor: '#303030' }} />
+      <CardPlaceholder height={80} style={{ backgroundColor: '#1c1c1c', borderColor: '#303030' }} />
+      <CardPlaceholder height={80} style={{ backgroundColor: '#1c1c1c', borderColor: '#303030' }} />
+    </View>
+  </ScrollView>
+) : (
           <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }} bounces={true} overScrollMode="always">
             {/* Next Race Card */}
             {nextRace && (

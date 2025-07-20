@@ -37,4 +37,25 @@ export async function fetchAvailableSessions(year: number, event: string) {
   return await response.json();
 }
 
+export async function fetchLapPositions(year: number, event: string, session: string) {
+  const params = new URLSearchParams({ year: year.toString(), event, session });
+  const url = `${API_BASE_URL}/api/lapdata/positions?${params.toString()}`;
+  //console.log('fetchLapPositions URL:', url);
+  const response = await fetch(url);
+  console.log("Test: ", response);
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to fetch lap positions: ${errorText}`);
+  }
+  return await response.json();
+}
+
+export async function fetchSessionIncidents(year: number, event: string, session: string) {
+  const params = new URLSearchParams({ year: year.toString(), event, session });
+  const url = `${API_BASE_URL}/api/incidents?${params.toString()}`;
+  const response = await fetch(url /*, { headers: getHeaders() }*/);
+  if (!response.ok) throw new Error('Failed to fetch session incidents');
+  return await response.json();
+}
+
 // Add other API calls as needed, matching your FastAPI endpoints

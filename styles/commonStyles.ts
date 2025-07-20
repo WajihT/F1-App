@@ -1,7 +1,7 @@
 import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 
 export const colors = {
-  primary: '#FF0000',      // F1 Red
+  primary: '#7d2629',     // F1 Red
   secondary: '#1a1a1a',    // Dark Gray
   accent: '#ffffff',       // White
   background: '#0f0f0f',   // Very Dark Gray

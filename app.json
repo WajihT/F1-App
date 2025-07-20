@@ -27,7 +27,7 @@
       "package": "com.anonymous.F1Analytics"
     },
     "web": {
-      "favicon": "./assets/images/final_quest_240x240.png",
+      "favicon": "./assets/images/tire.png",
       "bundler": "metro"
     },
     "plugins": [

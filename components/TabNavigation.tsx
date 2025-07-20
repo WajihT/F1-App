@@ -14,7 +14,7 @@ interface TabNavigationProps {
 
 const tabs = [
   { id: 'home', label: 'Home', icon: <TireIcon width={22} height={22} /> },
-  { id: 'standings', label: 'Standings', icon: <FontAwesome5 name="trophy" size={20} /> },
+  { id: 'standings', label: 'Standings', icon: <Ionicons name="trophy-outline" size={22} /> },
   { id: 'calendar', label: 'Calendar', icon: <Feather name="calendar" size={22} /> },
   { id: 'profile', label: 'Profile', icon: <Ionicons name="person-circle-outline" size={22} /> },
 ];
@@ -40,12 +40,12 @@ export default function TabNavigation({ activeTab, onTabPress }: TabNavigationPr
           >
             <View>
               {React.cloneElement(tab.icon, {
-                color: activeTab === tab.id ? colors.primary : colors.grey,
+                color: activeTab === tab.id ? 'white' : colors.grey,
               })}
             </View>
             <Text
               style={{
-                color: activeTab === tab.id ? colors.primary : colors.grey,
+                color: activeTab === tab.id ? 'white' : colors.grey,
                 fontWeight: activeTab === tab.id ? '700' : '400',
                 fontSize: 13,
                 marginTop: 2,
@@ -58,7 +58,7 @@ export default function TabNavigation({ activeTab, onTabPress }: TabNavigationPr
               <View style={{
                 height: 3,
                 borderRadius: 2,
-                backgroundColor: colors.primary,
+                backgroundColor: 'red',
                 marginTop: 4,
                 width: 24,
                 alignSelf: 'center',
