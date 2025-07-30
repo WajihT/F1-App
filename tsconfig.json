@@ -15,6 +15,7 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
+    "svg.d.ts",
     "workbox-config.js",
   ],
   "exclude": [

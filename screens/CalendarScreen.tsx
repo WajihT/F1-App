@@ -26,6 +26,16 @@ import { fetchRace, fetchRaceResults } from '@/lib/api';
 import TireIcon from "../assets/TireIcon";
 import { Pressable, type PressableStateCallbackType } from 'react-native';
 import PositionsTabContentMobile from '../components/PositionsTabContentMobileProps';
+import TireStrategy from '../components/TireStrategy';
+import LapTimesChart from '../components/LapTimesChart';
+import TelemetryDashboard from '../components/TelemetryDashboard';
+import CircuitComparisonChart from '../components/CircuitComparisonChart';
+import ThrottleChart from '../components/ThrottleChart';
+import BrakeChart from '../components/BrakeChart';
+import RPMChart from '../components/RPMChart';
+import DRSChart from '../components/DRSChart';
+import SpeedTraceChart from '../components/SpeedTraceChart';
+import TrackDominanceChart from '../components/TrackDominanceChart';
 
 
 const styles = StyleSheet.create({
@@ -377,7 +387,7 @@ const getRoundPillTextColor = (round: number) => {
         letterSpacing: -1,
       }}
     >
-      Race <Text style={{ color: '#ef4444' }}>Calendar</Text> <Text style={{ color: '#80a8d9' }}>& Results</Text>
+      Schedule <Text style={{ color: '#ef4444' }}>& Results</Text>
     </Text>
   </TouchableOpacity>
 </View>
@@ -666,20 +676,85 @@ const getRoundPillTextColor = (round: number) => {
   />
 )}
 
-{activeRaceTab === 'positions' && !selectedRace && (
-  <Text style={{ color: '#fff', fontSize: 16 }}>Select a race to view positions chart.</Text>
-)}
-  {activeRaceTab === 'strategy' && (
-    <Text style={{ color: '#fff', fontSize: 16 }}>Strategy content...</Text>
+  {activeRaceTab === 'strategy' && selectedRace && (
+    <TireStrategy
+      year={selectedSeason}
+      event={selectedRace.name.toLowerCase().replace(/ /g, '_')}
+      session={activeSession}
+    />
   )}
-  {activeRaceTab === 'laptimes' && (
-    <Text style={{ color: '#fff', fontSize: 16 }}>Lap Times content...</Text>
+  {activeRaceTab === 'laptimes' && selectedRace && (
+    <LapTimesChart
+      year={selectedSeason}
+      event={selectedRace.name.toLowerCase().replace(/ /g, '_')}
+      session={activeSession}
+    />
   )}
-  {activeRaceTab === 'circuit' && (
-    <Text style={{ color: '#fff', fontSize: 16 }}>Track Dominance content...</Text>
+  {activeRaceTab === 'circuit' && selectedRace && (
+    <View style={{ paddingBottom: 20, paddingHorizontal: 16 }}>
+      {/* Track Dominance Charts */}
+      <View style={{ gap: 24 }}>
+        {/* Speed Trace Chart */}
+        <View>
+          <CircuitComparisonChart
+            year={selectedSeason}
+            event={selectedRace.name.toLowerCase().replace(/ /g, '_')}
+            session={activeSession}
+          />
+        </View>
+
+        {/* Track Dominance Comparison Chart */}
+        <View>
+          <TrackDominanceChart
+            year={selectedSeason}
+            event={selectedRace.name.toLowerCase().replace(/ /g, '_')}
+            session={activeSession}
+          />
+        </View>
+      </View>
+    </View>
   )}
-  {activeRaceTab === 'telemetry' && (
-    <Text style={{ color: '#fff', fontSize: 16 }}>Telemetry content...</Text>
+  {activeRaceTab === 'telemetry' && selectedRace && (
+    <View style={{ paddingBottom: 20, paddingHorizontal: 16 }}>
+      {/* Vertical stack layout for the 4 telemetry charts */}
+      <View style={{ gap: 24 }}>
+        {/* Throttle Chart */}
+        <View>
+          <ThrottleChart
+            year={selectedSeason}
+            event={selectedRace.name.toLowerCase().replace(/ /g, '_')}
+            session={activeSession}
+          />
+        </View>
+
+        {/* Brake Chart */}
+        <View>
+          <BrakeChart
+            year={selectedSeason}
+            event={selectedRace.name.toLowerCase().replace(/ /g, '_')}
+            session={activeSession}
+          />
+        </View>
+
+        {/* RPM Chart */}
+        <View>
+          <RPMChart
+            year={selectedSeason}
+            event={selectedRace.name.toLowerCase().replace(/ /g, '_')}
+            session={activeSession}
+          />
+        </View>
+
+        {/* DRS Chart */}
+        <View>
+          <DRSChart
+            year={selectedSeason}
+            event={selectedRace.name.toLowerCase().replace(/ /g, '_')}
+            session={activeSession}
+          />
+        </View>
+      </View>
+    </View>
   )}
 </View>
 

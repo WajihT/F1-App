@@ -8,6 +8,7 @@ import { Animated } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import TireIcon from "../assets/TireIcon"; 
 import { LinearGradient } from 'expo-linear-gradient';
+import { Linking } from 'react-native';
 
 
 export default function HomeScreen() {
@@ -115,26 +116,29 @@ function CardPlaceholder({ height = 80, style = {} }) {
   );
 }
 
-  const latestNews = [
-    {
-      id: 1,
-      title: `${selectedSeason} F1 Season Overview`,
-      summary: `Explore the complete ${selectedSeason} Formula 1 championship standings and race results`,
-      time: '1 hour ago',
-    },
-    {
-      id: 2,
-      title: 'Championship Battle Heats Up',
-      summary: 'Drivers and constructors fight for every point in the standings',
-      time: '3 hours ago',
-    },
-    {
-      id: 3,
-      title: 'Historical F1 Data Available',
-      summary: 'Browse through decades of Formula 1 history and statistics',
-      time: '1 day ago',
-    },
-  ];
+const latestNews = [
+  {
+    id: 1,
+    title: 'Spa Set to Host Wet Belgian GP',
+    summary: 'Weather forecasts predict rain for the Belgian Grand Prix weekend – could shake up the standings.',
+    time: '2 hours ago',
+    url: 'https://www.motorsport.com/f1/news/spa-2025-weather-forecast-rain/1056789/',
+  },
+  {
+    id: 2,
+    title: 'Oscar Piastri Leads Drivers’ Championship',
+    summary: 'The McLaren driver continues to impress as he extends his lead ahead of Spa.',
+    time: '4 hours ago',
+    url: 'https://www.formula1.com/en/latest/article/oscar-piastri-leads-2025-standings.1A2BC3D4.html',
+  },
+  {
+    id: 3,
+    title: 'Audi Confirms 2026 Engine Partnership',
+    summary: 'Audi officially announces engine development for their F1 debut in 2026.',
+    time: '1 day ago',
+    url: 'https://www.racefans.net/2025/07/21/audi-2026-f1-engine-confirmation/',
+  },
+];
 
   return (
     <LinearGradient
@@ -289,8 +293,8 @@ function CardPlaceholder({ height = 80, style = {} }) {
                   <Text style={[commonStyles.title, { textAlign: 'center', fontSize: 18 }]}>
                     {driverLeader ? driverLeader.name : 'Loading...'}
                   </Text>
-                  <Text style={[commonStyles.text, { textAlign: 'center', color: '#facc15' }]}>
-                    {driverLeader ? `${driverLeader.points} pts` : '-'}
+                  <Text style={[commonStyles.text, { textAlign: 'center', color: '#f59e0b' }]}>
+                    {driverLeader ? `${driverLeader.points} PTS` : '-'}
                   </Text>
                 </View>
                 <View style={[
@@ -309,8 +313,8 @@ function CardPlaceholder({ height = 80, style = {} }) {
                   <Text style={[commonStyles.title, { textAlign: 'center', fontSize: 18 }]}>
                     {constructorLeader ? constructorLeader.name : 'Loading...'}
                   </Text>
-                  <Text style={[commonStyles.text, { textAlign: 'center', color: '#facc15' }]}>
-                    {constructorLeader ? `${constructorLeader.points} pts` : '-'}
+                  <Text style={[commonStyles.text, { textAlign: 'center', color: '#f59e0b' }]}>
+                    {constructorLeader ? `${constructorLeader.points} PTS` : '-'}
                   </Text>
                 </View>
               </View>
@@ -320,7 +324,7 @@ function CardPlaceholder({ height = 80, style = {} }) {
             <View style={commonStyles.section}>
               <Text style={commonStyles.subtitle}>Latest News</Text>
               {latestNews.map((news) => (
-                <TouchableOpacity key={news.id} style={commonStyles.card}>
+                <TouchableOpacity key={news.id} style={commonStyles.card} onPress={() => Linking.openURL(news.url)}>
                   <View style={commonStyles.row}>
                     <View style={{ flex: 1 }}>
                       <Text style={[commonStyles.text, { fontWeight: '600', marginBottom: 4 }]}>

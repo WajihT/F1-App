@@ -1,14 +1,13 @@
 {
   "expo": {
-    "name": "F1 Ananlytics",
+    "name": "F1 Analytics",
     "slug": "f1-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/tire.png",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/tire.png",
+      "image": "./assets/images/starting_screen.jpg",
       "resizeMode": "cover",
       "backgroundColor": "#000000"
     },

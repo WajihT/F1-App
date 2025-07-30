@@ -179,7 +179,7 @@ async fetchConstructorStandings(season: number): Promise<Constructor[]> {
     return teams.map((team: any, idx: number) => ({
       position: team.position ?? idx + 1,
       name: `${team.team}`,
-      points: team.points + ' PTS',
+      points: team.points,
       wins: team.wins,
       constructorId: team.constructorId,
       nationality: team.nationality,
