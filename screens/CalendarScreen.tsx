@@ -526,7 +526,7 @@ const getRoundPillTextColor = (round: number) => {
     borderColor: '#384151',
     padding: 4,
     marginVertical: 8,
-    marginHorizontal: 6,
+    marginHorizontal: 0,
     marginBottom: 18,
   }}
 >

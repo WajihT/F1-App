@@ -446,7 +446,7 @@ function ConstructorCardPlaceholder({ position }: { position: number }) {
 
                         <View style={commonStyles.centerContent}>
                           <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 14, color: textColor }}>
-                            {constructor.points}
+                            {constructor.points} PTS
                           </Text>
                           <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 14, color: textColor }}>
                             {constructor.wins} wins

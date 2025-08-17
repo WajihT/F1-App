@@ -7,14 +7,33 @@ import {
   ActivityIndicator,
   Dimensions,
   Alert,
+  Modal,
 } from 'react-native';
 import { VictoryChart, VictoryLine, VictoryAxis, VictoryLegend, VictoryContainer } from 'victory-native';
-import { colors } from '../styles/commonStyles';
+import { commonStyles, colors } from '../styles/commonStyles';
 import { fetchLapTimes, fetchSessionDrivers } from '../lib/api';
 import { LapTimeDataPoint, SessionDriver } from '../lib/types';
 import Icon from './Icon';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Feather from '@expo/vector-icons/Feather';
+import Svg, { Path, Rect } from 'react-native-svg';
+
+// SVG Icon Components
+const TableIcon = ({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <Path d="M12 3v18" />
+    <Rect width="18" height="18" x="3" y="3" rx="2" />
+    <Path d="M3 9h18" />
+    <Path d="M3 15h18" />
+  </Svg>
+);
+
+const ChartLineIcon = ({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <Path d="M3 3v16a2 2 0 0 0 2 2h16" />
+    <Path d="m19 9-5 5-4-4-3 3" />
+  </Svg>
+);
 
 interface LapTimesChartProps {
   year: number;
@@ -126,6 +145,7 @@ const LapTimesChart: React.FC<LapTimesChartProps> = ({ year, event, session }) =
   const [shouldLoadChart, setShouldLoadChart] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
+  const [driverModalVisible, setDriverModalVisible] = useState(false);
 
   const screenWidth = Dimensions.get('window').width;
 
@@ -212,76 +232,209 @@ const LapTimesChart: React.FC<LapTimesChartProps> = ({ year, event, session }) =
     });
   };
 
+  const handleDriverModalClose = () => {
+    setDriverModalVisible(false);
+  };
+
   const renderDriverSelector = () => (
     <View style={{ marginBottom: 20 }}>
-      <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 12 }}>
-        Select Drivers ({selectedDrivers.length}/{MAX_DRIVERS})
-      </Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          {availableDrivers.map(driver => {
-            const isSelected = selectedDrivers.includes(driver.code);
-            return (
-              <TouchableOpacity
-                key={driver.code}
-                style={{
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  borderRadius: 20,
-                  backgroundColor: isSelected 
-                    ? getDriverColor(driver.code, year) 
-                    : colors.backgroundAlt,
-                  borderWidth: 1,
-                  borderColor: isSelected 
-                    ? getDriverColor(driver.code, year) 
-                    : colors.grey,
-                  minWidth: 60,
-                  alignItems: 'center',
-                }}
-                onPress={() => toggleDriverSelection(driver.code)}
-                disabled={isLoadingDrivers}
-              >
-                <Text style={{
-                  color: isSelected ? '#fff' : colors.textSecondary,
-                  fontWeight: isSelected ? 'bold' : 'normal',
-                  fontSize: 12,
-                }}>
-                  {driver.code}
-                </Text>
-                <Text style={{
-                  color: isSelected ? '#fff' : colors.textSecondary,
-                  fontSize: 10,
-                  opacity: 0.8,
-                }}>
-                  {driver.name.split(' ').pop()}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+      <TouchableOpacity
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          padding: 16,
+          backgroundColor: "#14141c",
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: "#212a39",
+        }}
+        onPress={() => setDriverModalVisible(true)}
+      >
+        <View style={{ 
+          backgroundColor: colors.primary + '20',
+          borderRadius: 12,
+          padding: 8,
+          marginRight: 16,
+        }}>
+          <MaterialIcons name="people" size={24} color={colors.primary} />
         </View>
-      </ScrollView>
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
+            Select Drivers ({selectedDrivers.length}/{MAX_DRIVERS})
+          </Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+            {selectedDrivers.length > 0 
+              ? selectedDrivers.join(', ')
+              : `Choose ${MIN_DRIVERS}-${MAX_DRIVERS} drivers to compare`
+            }
+          </Text>
+        </View>
+        <MaterialIcons name="chevron-right" size={20} color={colors.grey} />
+      </TouchableOpacity>
     </View>
+  );
+
+  const renderDriverModal = () => (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={driverModalVisible}
+      onRequestClose={handleDriverModalClose}
+    >
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      }}>
+        <View style={{
+          backgroundColor: '#141422',
+          borderRadius: 20,
+          padding: 24,
+          margin: 20,
+          maxHeight: '80%',
+          width: '90%',
+          borderWidth: 1,
+          borderColor: colors.border,
+        }}>
+          {/* Modal Header */}
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: 20,
+          }}>
+            <View style={{ flex: 1, paddingRight: 16 }}>
+              <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#fff', marginBottom: 4 }}>
+                Select Drivers
+              </Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+                Choose {MIN_DRIVERS}-{MAX_DRIVERS} drivers to compare lap times
+              </Text>
+            </View>
+            <TouchableOpacity 
+              onPress={handleDriverModalClose}
+              style={{
+                padding: 6,
+                borderRadius: 10,
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginTop: -4,
+                marginRight: -4,
+              }}
+            >
+              <MaterialIcons name="close" size={24} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Driver Selection */}
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {availableDrivers.map((driver) => {
+              const isSelected = selectedDrivers.includes(driver.code);
+              const driverColor = getDriverColor(driver.code, year);
+              
+              return (
+                <TouchableOpacity
+                  key={driver.code}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    padding: 16,
+                    marginBottom: 8,
+                    backgroundColor: isSelected ? driverColor + '20' : '#202534ff',
+                    borderRadius: 12,
+                    borderWidth: isSelected ? 2 : 1,
+                    borderColor: isSelected ? driverColor : colors.border,
+                  }}
+                  onPress={() => toggleDriverSelection(driver.code)}
+                  disabled={isLoadingDrivers}
+                >
+                  <View style={{ marginRight: 12, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', backgroundColor: driverColor + '30', borderRadius: 20 }}>
+                    <Text style={{ color: driverColor, fontWeight: 'bold', fontSize: 14 }}>
+                      {driver.code}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>
+                      {driver.name}
+                    </Text>
+                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                      {getDriverTeam(driver.code, year)}
+                    </Text>
+                  </View>
+                  <View style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    backgroundColor: driverColor,
+                    marginLeft: 8,
+                  }} />
+                  {isSelected && (
+                    <MaterialIcons 
+                      name="check-circle" 
+                      size={24} 
+                      color={driverColor}
+                      style={{ marginLeft: 8 }}
+                    />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {/* Selection Info */}
+          <View style={{
+            marginTop: 16,
+            padding: 12,
+            backgroundColor: selectedDrivers.length === MAX_DRIVERS ? '#7d2629' : '#002f42',
+            borderRadius: 8,
+          }}>
+            <Text style={{ color: colors.textSecondary, fontSize: 12, textAlign: 'center' }}>
+              {selectedDrivers.length < MIN_DRIVERS 
+                ? `Select at least ${MIN_DRIVERS - selectedDrivers.length} more driver${MIN_DRIVERS - selectedDrivers.length !== 1 ? 's' : ''}`
+                : selectedDrivers.length === MAX_DRIVERS
+                ? 'Maximum drivers selected'
+                : `You can select ${MAX_DRIVERS - selectedDrivers.length} more driver${MAX_DRIVERS - selectedDrivers.length !== 1 ? 's' : ''}`
+              }
+            </Text>
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 
   const renderLoadButton = () => (
     <View style={{ alignItems: 'center', marginVertical: 20 }}>
       <TouchableOpacity
         style={{
-          backgroundColor: colors.primary,
-          paddingHorizontal: 24,
-          paddingVertical: 12,
-          borderRadius: 8,
+          backgroundColor: '#2a2d3a',
+          paddingHorizontal: 32,
+          paddingVertical: 16,
+          borderRadius: 12,
           flexDirection: 'row',
           alignItems: 'center',
+          justifyContent: 'center',
           gap: 8,
+          width: '100%',
+          maxWidth: 280,
+          borderWidth: 1,
+          borderColor: '#3a3f4e',
         }}
         onPress={() => setShouldLoadChart(true)}
         disabled={selectedDrivers.length < MIN_DRIVERS || isLoadingDrivers}
       >
-        <MaterialIcons name="show-chart" size={20} color="#fff" />
-        <Text style={{ color: '#fff', fontWeight: 'bold' }}>Load Chart</Text>
+        <Feather name="bar-chart-2" size={20} color="#fff" />
+        <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>Load Chart</Text>
       </TouchableOpacity>
-      <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 8, textAlign: 'center' }}>
+      <Text style={{ 
+        color: colors.textSecondary, 
+        fontSize: 13, 
+        marginTop: 12, 
+        textAlign: 'center',
+        lineHeight: 18,
+        paddingHorizontal: 20
+      }}>
         Select drivers and click load to view lap time comparison
       </Text>
     </View>
@@ -327,13 +480,13 @@ const LapTimesChart: React.FC<LapTimesChartProps> = ({ year, event, session }) =
             <VictoryChart
               height={chartHeight}
               width={Math.max(chartWidth, maxLap * 15)}
-              padding={{ left: 80, top: 20, right: 40, bottom: 60 }}
+              padding={{ left: 40, top: 20, right: 5, bottom: 60 }}
               domain={{ x: [minLap, maxLap], y: yDomain }}
               containerComponent={
                 <VictoryContainer 
                   style={{ 
                     touchAction: "auto",
-                    backgroundColor: colors.background 
+                    backgroundColor: "transparent"
                   }}
                 />
               }
@@ -598,45 +751,63 @@ const LapTimesChart: React.FC<LapTimesChartProps> = ({ year, event, session }) =
   const renderViewToggle = () => (
     <View style={{ 
       flexDirection: 'row', 
-      backgroundColor: colors.backgroundAlt, 
+      backgroundColor: "#14141c",
+      borderColor: "#212a39",
+      borderWidth: 1,
       borderRadius: 8, 
-      padding: 4, 
-      alignSelf: 'center',
+      padding: 1.5, 
+      marginHorizontal: 3,
       marginBottom: 16 
     }}>
       <TouchableOpacity
         style={{
+          flex: 1,
           paddingHorizontal: 16,
           paddingVertical: 8,
           borderRadius: 6,
           backgroundColor: viewMode === 'chart' ? colors.primary : 'transparent',
+          alignItems: 'center',
         }}
         onPress={() => setViewMode('chart')}
       >
-        <Text style={{ 
-          color: viewMode === 'chart' ? '#fff' : colors.textSecondary, 
-          fontWeight: viewMode === 'chart' ? 'bold' : 'normal',
-          fontSize: 12 
-        }}>
-          📈 Chart
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <ChartLineIcon 
+            size={14} 
+            color={viewMode === 'chart' ? '#fff' : colors.textSecondary} 
+          />
+          <Text style={{ 
+            color: viewMode === 'chart' ? '#fff' : colors.textSecondary, 
+            fontWeight: viewMode === 'chart' ? 'bold' : 'normal',
+            fontSize: 12 
+          }}>
+            Chart
+          </Text>
+        </View>
       </TouchableOpacity>
       <TouchableOpacity
         style={{
+          flex: 1,
           paddingHorizontal: 16,
           paddingVertical: 8,
           borderRadius: 6,
           backgroundColor: viewMode === 'table' ? colors.primary : 'transparent',
+          alignItems: 'center',
         }}
         onPress={() => setViewMode('table')}
       >
-        <Text style={{ 
-          color: viewMode === 'table' ? '#fff' : colors.textSecondary, 
-          fontWeight: viewMode === 'table' ? 'bold' : 'normal',
-          fontSize: 12 
-        }}>
-          📊 Table
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <TableIcon 
+            size={14} 
+            color={viewMode === 'table' ? '#fff' : colors.textSecondary} 
+          />
+          <Text style={{ 
+            color: viewMode === 'table' ? '#fff' : colors.textSecondary, 
+            fontWeight: viewMode === 'table' ? 'bold' : 'normal',
+            fontSize: 12 
+          }}>
+            Table
+          </Text>
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -662,7 +833,7 @@ const LapTimesChart: React.FC<LapTimesChartProps> = ({ year, event, session }) =
             }}
             onPress={() => setShouldLoadChart(false)}
           >
-            <Text style={{ color: '#fff' }}>Back to Selection</Text>
+            <Text style={{ color: '#fff' }}>Reset</Text>
           </TouchableOpacity>
         </View>
       );
@@ -729,30 +900,21 @@ const LapTimesChart: React.FC<LapTimesChartProps> = ({ year, event, session }) =
         {renderDriverSelector()}
         {renderViewToggle()}
         {viewMode === 'chart' ? renderChart() : renderTable()}
-        <TouchableOpacity
-          style={{
-            backgroundColor: colors.backgroundAlt,
-            paddingHorizontal: 16,
-            paddingVertical: 8,
-            borderRadius: 6,
-            alignSelf: 'center',
-            marginTop: 12,
-          }}
-          onPress={() => setShouldLoadChart(false)}
-        >
-          <Text style={{ color: '#fff' }}>Back to Selection</Text>
-        </TouchableOpacity>
+        
       </View>
     );
   };
 
   return (
-    <ScrollView style={{ flex: 1, padding: 20 }}>
-      <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 20 }}>
-        Lap Time Comparison
-      </Text>
-      {renderContent()}
-    </ScrollView>
+    <View style={{ padding: 0, backgroundColor: "transparent" }}>
+            <Text style={[commonStyles.title, { marginBottom: 16, textAlign: 'center' }]}>
+              Lap Times Comparison
+            </Text>
+      <ScrollView style={{ flex: 1, padding: 0, backgroundColor: "transparent" }}>
+        {renderContent()}
+      </ScrollView>
+      {renderDriverModal()}
+    </View>
   );
 };
 

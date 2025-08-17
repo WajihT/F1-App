@@ -1,5 +1,5 @@
 const API_BASE_URL = 'https://f1analytics-be-production.up.railway.app'; //Use this for prod: https://f1analytics-be-production.up.railway.app FastAPI backend URL 
-// Use this for dev: http://192.168.0.186:8000
+// Use this for dev: http://192.168.0.238:8000
 
 export async function fetchDriverStandings(year: number) {
   const response = await fetch(`${API_BASE_URL}/api/standings/drivers?year=${year}`);

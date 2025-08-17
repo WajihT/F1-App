@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, Dimensions } from 'react-native';
-import { LineChart } from 'react-native-chart-kit';
-import { commonStyles } from '../styles/commonStyles';
+import { View, Text, TouchableOpacity, ScrollView, Alert, Dimensions, Modal, ActivityIndicator } from 'react-native';
+import { VictoryChart, VictoryArea, VictoryAxis, VictoryTheme } from 'victory-native';
+import { commonStyles, colors } from '../styles/commonStyles';
 import { fetchSessionDrivers, fetchRPMData } from '../lib/api';
 import { SessionDriver } from '../lib/types';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 interface RPMDataPoint {
   Distance: number;
@@ -18,6 +19,75 @@ interface RPMChartProps {
   lap?: string | number;
 }
 
+// Team mapping for 2024 season
+const getDriverTeam = (driverCode: string, year: number): string => {
+  const teams2024: { [key: string]: string } = {
+    VER: 'Red Bull Racing',
+    PER: 'Red Bull Racing',
+    TSU: 'Red Bull Racing',
+    RUS: 'Mercedes',
+    ANT: 'Mercedes',
+    HAM: 'Ferrari', // Updated for 2025
+    LEC: 'Ferrari',
+    NOR: 'McLaren',
+    PIA: 'McLaren',
+    ALO: 'Aston Martin',
+    STR: 'Aston Martin',
+    GAS: 'Alpine',
+    COL: 'Alpine',
+    ALB: 'Williams',
+    SAR: 'Williams',
+    SAI: 'Williams', // Updated for 2025
+    BEA: 'Haas',
+    OCO: 'Haas', // Updated for 2025
+    LAW: 'RB',
+    RIC: 'RB',
+    HAD: 'RB',
+    ZHO: 'Kick Sauber',
+    BOT: 'Kick Sauber',
+    HUL: 'Kick Sauber', // Updated for 2025
+    BOR: 'Kick Sauber',
+  };
+  
+  return teams2024[driverCode] || 'Unknown Team';
+};
+
+// Driver colors mapping (similar to your web version)
+const getDriverColor = (driverCode: string, year: number): string => {
+  const colors2024: { [key: string]: string } = {
+    VER: '#0600EF', // Red Bull
+    PER: '#0600EF',
+    TSU: '#0600EF',
+    RUS: '#00D2BE', // Mercedes
+    HAM: '#DC143C', // Ferrari (2025)
+    ANT: '#00D2BE', // Mercedes
+    LEC: '#DC143C', // Ferrari
+    SAI: '#005AFF', // Williams (2025)
+    NOR: '#FF8700', // McLaren
+    PIA: '#FF8700',
+    ALO: '#006F62', // Aston Martin
+    STR: '#006F62',
+    GAS: '#0090FF', // Alpine
+    OCO: '#FFFFFF', // Haas (2025)
+    COL: '#0090FF', // Alpine
+    ALB: '#005AFF', // Williams
+    SAR: '#005AFF', // Williams
+    BEA: '#FFFFFF', // Haas
+    HUL: '#52E252', // Kick Sauber (2025)
+    LAW: '#6692FF', // RB
+    RIC: '#6692FF', // RB
+    HAD: '#6692FF',
+    ZHO: '#52E252', // Kick Sauber
+    BOT: '#52E252',
+    BOR: '#52E252',
+  };
+
+  return colors2024[driverCode] || '#9CA3AF';
+};
+
+const MIN_DRIVERS = 1;
+const MAX_DRIVERS = 1;
+
 const RPMChart: React.FC<RPMChartProps> = ({
   year,
   event,
@@ -26,35 +96,84 @@ const RPMChart: React.FC<RPMChartProps> = ({
   lap = 'fastest'
 }) => {
   const [drivers, setDrivers] = useState<SessionDriver[]>([]);
-  const [selectedDriver, setSelectedDriver] = useState<string>(initialDriver);
+  const [selectedDrivers, setSelectedDrivers] = useState<string[]>([]);
   const [selectedLap, setSelectedLap] = useState<string | number>(lap);
   const [rpmData, setRpmData] = useState<RPMDataPoint[]>([]);
   const [loading, setLoading] = useState(false);
   const [shouldLoadChart, setShouldLoadChart] = useState(false);
+  const [isLoadingDrivers, setIsLoadingDrivers] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [driverModalVisible, setDriverModalVisible] = useState(false);
 
   // Fetch available drivers
   useEffect(() => {
     const loadDrivers = async () => {
+      if (!year || !event || !session) return;
+      
+      setIsLoadingDrivers(true);
+      setError(null);
+      
       try {
         const sessionDrivers = await fetchSessionDrivers(year, event, session);
         setDrivers(sessionDrivers);
         
-        if (!initialDriver && sessionDrivers.length > 0) {
-          setSelectedDriver(sessionDrivers[0].code);
-        }
-      } catch (error) {
-        console.error('Failed to fetch drivers:', error);
+        // Don't auto-select drivers - let users choose manually for each chart
+        // This prevents conflicts when multiple charts are on the same screen
+      } catch (err) {
+        console.error('Failed to fetch drivers:', err);
+        setError('Failed to load drivers');
+      } finally {
+        setIsLoadingDrivers(false);
       }
     };
 
-    if (year && event && session) {
-      loadDrivers();
+    loadDrivers();
+  }, [year, event, session]);
+
+  // Load chart when requested
+  useEffect(() => {
+    if (shouldLoadChart && selectedDrivers.length === MIN_DRIVERS) {
+      loadRPMData();
     }
-  }, [year, event, session, initialDriver]);
+  }, [shouldLoadChart, selectedDrivers, year, event, session]);
+
+  // Handle driver selection
+  const toggleDriverSelection = (driverCode: string) => {
+    setSelectedDrivers(prev => {
+      const isSelected = prev.includes(driverCode);
+      let newSelection: string[];
+
+      if (isSelected) {
+        // Always allow deselecting drivers
+        newSelection = prev.filter(d => d !== driverCode);
+      } else {
+        // Add driver only if we haven't reached maximum
+        if (prev.length < MAX_DRIVERS) {
+          newSelection = [...prev, driverCode];
+        } else {
+          // For single driver selection, replace the current selection
+          newSelection = [driverCode];
+        }
+      }
+
+      // Only reset chart loading state if the chart was already loaded and we're changing the selection
+      // This prevents hiding already loaded charts when selecting drivers for other charts
+      if (shouldLoadChart && rpmData.length > 0) {
+        setShouldLoadChart(false);
+        setRpmData([]);
+      }
+      
+      return newSelection;
+    });
+  };
+
+  const handleDriverModalClose = () => {
+    setDriverModalVisible(false);
+  };
 
   const loadRPMData = async () => {
-    if (!selectedDriver) {
-      Alert.alert('Error', 'Please select a driver');
+    if (selectedDrivers.length !== MIN_DRIVERS) {
+      Alert.alert('Error', `Please select a driver`);
       return;
     }
 
@@ -63,7 +182,7 @@ const RPMChart: React.FC<RPMChartProps> = ({
     
     try {
       const lapNumber = selectedLap === 'fastest' ? undefined : Number(selectedLap);
-      const data = await fetchRPMData(year, event, session, selectedDriver, lapNumber);
+      const data = await fetchRPMData(year, event, session, selectedDrivers[0], lapNumber);
       setRpmData(data);
     } catch (error) {
       console.error('Failed to fetch RPM data:', error);
@@ -73,98 +192,189 @@ const RPMChart: React.FC<RPMChartProps> = ({
     }
   };
 
-  const renderDriverSelector = () => {
-    const selectedDriverObj = drivers.find(d => d.code === selectedDriver);
-    
-    return (
-      <View style={{ marginBottom: 12 }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
+  const renderDriverModal = () => (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={driverModalVisible}
+      onRequestClose={handleDriverModalClose}
+    >
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      }}>
+        <View style={{
+          backgroundColor: '#141422',
+          borderRadius: 20,
+          padding: 24,
+          margin: 20,
+          maxHeight: '80%',
+          width: '90%',
+          borderWidth: 1,
+          borderColor: colors.border,
+        }}>
+          {/* Modal Header */}
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: 20,
+          }}>
+            <View style={{ flex: 1, paddingRight: 16 }}>
+              <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#fff', marginBottom: 4 }}>
+                Select Driver
+              </Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+                Choose a driver to analyze RPM data
+              </Text>
+            </View>
+            <TouchableOpacity 
+              onPress={handleDriverModalClose}
+              style={{
+                padding: 6,
+                borderRadius: 10,
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginTop: -4,
+                marginRight: -4,
+              }}
+            >
+              <MaterialIcons name="close" size={24} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Driver Selection */}
+          <ScrollView showsVerticalScrollIndicator={false}>
             {drivers.map((driver) => {
-              const isSelected = selectedDriver === driver.code;
+              const isSelected = selectedDrivers.includes(driver.code);
+              const driverColor = getDriverColor(driver.code, year);
+              
               return (
                 <TouchableOpacity
                   key={driver.code}
-                  onPress={() => setSelectedDriver(driver.code)}
                   style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    borderRadius: 20,
-                    backgroundColor: isSelected ? '#dc2626' : '#1f2937',
-                    borderWidth: 1,
-                    borderColor: isSelected ? '#dc2626' : '#374151',
-                    minWidth: 60,
+                    flexDirection: 'row',
                     alignItems: 'center',
+                    padding: 16,
+                    marginBottom: 8,
+                    backgroundColor: isSelected ? driverColor + '20' : '#202534ff',
+                    borderRadius: 12,
+                    borderWidth: isSelected ? 2 : 1,
+                    borderColor: isSelected ? driverColor : colors.border,
                   }}
+                  onPress={() => toggleDriverSelection(driver.code)}
+                  disabled={isLoadingDrivers}
                 >
-                  <Text style={{
-                    color: isSelected ? '#fff' : '#9ca3af',
-                    fontWeight: isSelected ? 'bold' : 'normal',
-                    fontSize: 12,
-                  }}>
-                    {driver.code}
-                  </Text>
-                  <Text style={{
-                    color: isSelected ? '#fff' : '#9ca3af',
-                    fontSize: 10,
-                    opacity: 0.8,
-                  }}>
-                    {driver.name?.split(' ').pop() || driver.code}
-                  </Text>
+                  <View style={{ marginRight: 12, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', backgroundColor: driverColor + '30', borderRadius: 20 }}>
+                    <Text style={{ color: driverColor, fontWeight: 'bold', fontSize: 14 }}>
+                      {driver.code}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>
+                      {driver.name}
+                    </Text>
+                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                      {getDriverTeam(driver.code, year)}
+                    </Text>
+                  </View>
+                  <View style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    backgroundColor: driverColor,
+                    marginLeft: 8,
+                  }} />
+                  {isSelected && (
+                    <MaterialIcons 
+                      name="check-circle" 
+                      size={24} 
+                      color={driverColor}
+                      style={{ marginLeft: 8 }}
+                    />
+                  )}
                 </TouchableOpacity>
               );
             })}
+          </ScrollView>
+
+          {/* Selection Info */}
+          <View style={{
+            marginTop: 16,
+            padding: 12,
+            backgroundColor: selectedDrivers.length === MAX_DRIVERS ? '#002f42' : '#7d2629',
+            borderRadius: 8,
+          }}>
+            <Text style={{ color: colors.textSecondary, fontSize: 12, textAlign: 'center' }}>
+              {selectedDrivers.length === 0
+                ? `Select a driver to analyze`
+                : selectedDrivers.length === MAX_DRIVERS
+                ? 'Ready to analyze! Close to proceed.'
+                : `Select a driver to analyze`
+              }
+            </Text>
           </View>
-        </ScrollView>
+        </View>
       </View>
-    );
-  };
+    </Modal>
+  );
+
+  const renderLoadButton = () => (
+    <View style={{ alignItems: 'center', marginVertical: 20 }}>
+      <TouchableOpacity
+        style={{
+          backgroundColor: '#2a2d3a',
+          paddingHorizontal: 32,
+          paddingVertical: 16,
+          borderRadius: 12,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          width: '100%',
+          maxWidth: 280,
+          borderWidth: 1,
+          borderColor: '#3a3f4e',
+        }}
+        onPress={() => setShouldLoadChart(true)}
+        disabled={selectedDrivers.length !== MIN_DRIVERS || isLoadingDrivers}
+      >
+        <MaterialIcons name="speed" size={20} color="#fff" />
+        <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>Load RPM Chart</Text>
+      </TouchableOpacity>
+      <Text style={{ 
+        color: colors.textSecondary, 
+        fontSize: 13, 
+        marginTop: 12, 
+        textAlign: 'center',
+        lineHeight: 18,
+        paddingHorizontal: 20
+      }}>
+        Select a driver and click load to view RPM analysis
+      </Text>
+    </View>
+  );
 
   const renderChart = () => {
     if (!shouldLoadChart) {
-      return (
-        <View style={{
-          height: 280,
-          backgroundColor: '#111827',
-          borderRadius: 12,
-          justifyContent: 'center',
-          alignItems: 'center',
-          marginTop: 16,
-        }}>
-          <Text style={{ color: '#9ca3af', fontSize: 16, marginBottom: 16, textAlign: 'center' }}>
-            Click load to view RPM data for selected driver
-          </Text>
-          <TouchableOpacity
-            onPress={loadRPMData}
-            style={{
-              backgroundColor: '#dc2626',
-              paddingHorizontal: 24,
-              paddingVertical: 12,
-              borderRadius: 8,
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}
-            disabled={loading}
-          >
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
-              {loading ? 'Loading...' : 'Load RPM Chart'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      );
+      return renderLoadButton();
     }
 
     if (loading) {
       return (
         <View style={{
           height: 280,
-          backgroundColor: '#111827',
+          backgroundColor: 'transparent',
           borderRadius: 12,
           justifyContent: 'center',
           alignItems: 'center',
           marginTop: 16,
         }}>
-          <Text style={{ color: '#fff', fontSize: 16 }}>Loading...</Text>
+          <ActivityIndicator size="large" color="#dc2626" />
+          <Text style={{ color: '#fff', fontSize: 16, marginTop: 12 }}>Loading...</Text>
         </View>
       );
     }
@@ -180,28 +390,38 @@ const RPMChart: React.FC<RPMChartProps> = ({
           marginTop: 16,
         }}>
           <Text style={{ color: '#f87171', fontSize: 16 }}>
-            No RPM data found for {selectedDriver} lap {selectedLap}
+            No RPM data found for {selectedDrivers[0]} lap {selectedLap}
           </Text>
         </View>
       );
     }
 
-    const chartData = {
-      labels: rpmData.filter((_, index) => index % Math.ceil(rpmData.length / 6) === 0)
-        .map(point => `${Math.round(point.Distance)}m`),
-      datasets: [
-        {
-          data: rpmData.map(point => point.RPM),
-          color: (opacity = 1) => `rgba(34, 197, 94, ${opacity})`,
-          strokeWidth: 3,
-        },
-      ],
-    };
+    const selectedDriverColor = getDriverColor(selectedDrivers[0], year);
+    
+    // Prepare data for Victory Chart
+    const chartData = rpmData.map((point, index) => ({
+      x: point.Distance,
+      y: point.RPM,
+    }));
+
+    // Calculate domains for better visualization
+    const allRPMValues = rpmData.map(point => point.RPM);
+    const minRPM = Math.min(...allRPMValues);
+    const maxRPM = Math.max(...allRPMValues);
+    const yDomain: [number, number] = [Math.max(0, minRPM - 500), maxRPM + 500];
+
+    // Calculate X-axis domain
+    const maxDistance = rpmData.length > 0 ? rpmData[rpmData.length - 1].Distance : 0;
+    const minDistance = rpmData[0]?.Distance || 0;
+    const xDomain: [number, number] = [minDistance, maxDistance];
+
+    const chartHeight = 300;
+    const chartWidth = Dimensions.get('window').width - 32;
 
     return (
       <View style={{ marginTop: 16 }}>
         <View style={{
-          backgroundColor: '#111827',
+          backgroundColor: 'transparent',
           borderRadius: 12,
           padding: 16,
         }}>
@@ -212,33 +432,52 @@ const RPMChart: React.FC<RPMChartProps> = ({
             textAlign: 'center',
             marginBottom: 16,
           }}>
-            {selectedDriver}'s {selectedLap === 'fastest' ? 'Fastest Lap' : `Lap ${selectedLap}`} RPM
+            {selectedDrivers[0]}'s {selectedLap === 'fastest' ? 'Fastest Lap' : `Lap ${selectedLap}`} RPM
           </Text>
           
-          <LineChart
-            data={chartData}
-            width={Dimensions.get('window').width - 64}
-            height={200}
-            chartConfig={{
-              backgroundColor: '#111827',
-              backgroundGradientFrom: '#111827',
-              backgroundGradientTo: '#111827',
-              decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(156, 163, 175, ${opacity})`,
-              style: {
-                borderRadius: 16,
-              },
-              propsForDots: {
-                r: '0',
-              },
-            }}
-            bezier
-            style={{
-              marginVertical: 8,
-              borderRadius: 16,
-            }}
-          />
+          {/* Victory Chart */}
+          <View style={{ alignItems: 'center' }}>
+            <VictoryChart
+              theme={VictoryTheme.material}
+              width={chartWidth}
+              height={chartHeight}
+              domain={{ x: xDomain, y: yDomain }}
+              padding={{ left: 60, top: 20, right: 40, bottom: 60 }}
+            >
+              {/* Background grid */}
+              <VictoryAxis
+                dependentAxis
+                tickFormat={(t) => `${Math.round(t/1000)}k`}
+                style={{
+                  axis: { stroke: '#374151' },
+                  tickLabels: { fontSize: 12, fill: '#9ca3af' },
+                  grid: { stroke: '#374151', strokeWidth: 0.5 }
+                }}
+              />
+              <VictoryAxis
+                tickFormat={(t) => `${Math.round(t/1000)}k`}
+                style={{
+                  axis: { stroke: '#374151' },
+                  tickLabels: { fontSize: 12, fill: '#9ca3af' },
+                  grid: { stroke: '#374151', strokeWidth: 0.5 }
+                }}
+              />
+              
+              {/* RPM area chart */}
+              <VictoryArea
+                data={chartData}
+                style={{
+                  data: {
+                    fill: selectedDriverColor + '40',
+                    fillOpacity: 0.6,
+                    stroke: selectedDriverColor,
+                    strokeWidth: 2,
+                  }
+                }}
+                interpolation="natural"
+              />
+            </VictoryChart>
+          </View>
           
           <View style={{
             flexDirection: 'row',
@@ -249,7 +488,7 @@ const RPMChart: React.FC<RPMChartProps> = ({
               <View style={{
                 width: 12,
                 height: 12,
-                backgroundColor: '#22c55e',
+                backgroundColor: selectedDriverColor,
                 borderRadius: 2,
                 marginRight: 8,
               }} />
@@ -265,15 +504,48 @@ const RPMChart: React.FC<RPMChartProps> = ({
 
   return (
     <View>
+      {renderDriverModal()}
+      
       <Text style={[commonStyles.title, { marginBottom: 16, textAlign: 'center' }]}>
         RPM Analysis
       </Text>
       
       <View>
-        <Text style={{ color: '#9ca3af', fontSize: 14, marginBottom: 8 }}>
-          Driver:
-        </Text>
-        {renderDriverSelector()}
+        <View style={{ marginBottom: 20 }}>
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              padding: 16,
+              backgroundColor: "#14141c",
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: "#212a39",
+            }}
+            onPress={() => setDriverModalVisible(true)}
+          >
+            <View style={{ 
+              backgroundColor: colors.primary + '20',
+              borderRadius: 12,
+              padding: 8,
+              marginRight: 16,
+            }}>
+              <MaterialIcons name="people" size={24} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
+                {selectedDrivers.length === 0 ? 'Select Driver' : `${selectedDrivers[0]} Selected`}
+              </Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+                {selectedDrivers.length === 0
+                  ? 'Choose a driver to analyze RPM data'
+                  : `Ready to analyze ${selectedDrivers[0]}'s RPM data`
+                }
+              </Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={20} color={colors.grey} />
+          </TouchableOpacity>
+        </View>
         
         {renderChart()}
       </View>
