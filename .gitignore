@@ -30,8 +30,9 @@ yarn-error.*
 
 .natively/
 
-android/
-ios/
+# Ignore build directories at root level only
+/android/
+/ios/
 
 netlify.toml
 .netlify/
