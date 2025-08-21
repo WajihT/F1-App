@@ -1,0 +1,517 @@
+import { StyleSheet } from 'react-native';
+import { getResponsiveSpacing, getHorizontalPadding, screenDimensions } from '../utils/responsive';
+import { theme } from '../styles/theme';
+
+export const newsStyle = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+    paddingHorizontal: getHorizontalPadding(4),
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: getResponsiveSpacing(theme.spacing.xl),
+    paddingBottom: getResponsiveSpacing(theme.spacing.lg),
+    paddingHorizontal: getHorizontalPadding(4),
+  },
+  logoContainer: {
+    position: 'relative',
+    marginRight: getResponsiveSpacing(theme.spacing.md),
+  },
+logoGlow: {
+    position: 'absolute',
+    top: -10,
+    left: -10,
+    right: -10,
+    bottom: -10,
+    borderRadius: theme.borderRadius.round,
+    backgroundColor: theme.colors.ui.glow,
+  },
+  title: {
+    fontSize: screenDimensions.isSmall ? theme.typography.fontSize.lg : theme.typography.fontSize.xl,
+    fontFamily: theme.typography.fontFamily.bold,
+    color: theme.colors.text.primary,
+    letterSpacing: -1,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
+  },
+  statCard: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: theme.spacing.lg,
+    position: 'relative',
+  },
+  statIconContainer: {
+    position: 'absolute',
+    top: theme.spacing.sm,
+    right: theme.spacing.sm,
+    opacity: 0.3,
+  },
+  statValue: {
+    fontSize: theme.typography.fontSize.xxxl,
+    fontFamily: theme.typography.fontFamily.bold,
+    color: theme.colors.primary.main,
+  },
+  statLabel: {
+    fontSize: theme.typography.fontSize.sm,
+    fontFamily: theme.typography.fontFamily.medium,
+    color: theme.colors.text.secondary,
+    marginTop: theme.spacing.xs,
+  },
+  raceCard: {
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.lg,
+  },
+  raceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.lg,
+  },
+  raceTitleContainer: {
+    flex: 1,
+  },
+  raceMainContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.lg,
+  },
+  raceInfo: {
+    flex: 1,
+  },
+  raceLocationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: theme.spacing.xs,
+  },
+  raceLocation: {
+    fontSize: theme.typography.fontSize.sm,
+    fontFamily: theme.typography.fontFamily.medium,
+    color: theme.colors.text.tertiary,
+  },
+  raceFlag: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: getResponsiveSpacing(theme.spacing.md),
+  },
+  flagContainer: {
+    width: screenDimensions.isSmall ? 64 : 72,
+    height: screenDimensions.isSmall ? 48 : 54,
+    borderRadius: theme.borderRadius.md,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: theme.colors.ui.border,
+    shadowColor: theme.colors.ui.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  flagGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 2,
+  },
+  flagImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+    borderRadius: theme.borderRadius.sm,
+  },
+  sectionTitle: {
+    fontSize: theme.typography.fontSize.title,
+    fontFamily: theme.typography.fontFamily.bold,
+    color: '#bf3636',
+    marginBottom: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+  },
+  raceDateBadge: {
+    backgroundColor: theme.colors.primary.main,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.round,
+  },
+  raceDateText: {
+    fontSize: theme.typography.fontSize.sm,
+    fontFamily: theme.typography.fontFamily.semiBold,
+    color: theme.colors.text.primary,
+  },
+  raceName: {
+    fontSize: theme.typography.fontSize.xl,
+    fontFamily: theme.typography.fontFamily.bold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xs,
+  },
+  raceCircuit: {
+    fontSize: theme.typography.fontSize.md,
+    fontFamily: theme.typography.fontFamily.regular,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.lg,
+  },
+  raceActions: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+  primaryButton: {
+    flex: 1,
+  },
+  outlineButton: {
+    flex: 1,
+  },
+  winnerCard: {
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  winnerGradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  winnerInfo: {
+    flex: 1,
+  },
+  winnerDriver: {
+    fontSize: theme.typography.fontSize.lg,
+    fontFamily: theme.typography.fontFamily.bold,
+    color: theme.colors.text.primary,
+  },
+  winnerTeam: {
+    fontSize: theme.typography.fontSize.md,
+    fontFamily: theme.typography.fontFamily.medium,
+    color: theme.colors.text.secondary,
+  },
+  trophyContainer: {
+    marginLeft: theme.spacing.md,
+  },
+  trophy: {
+    fontSize: 48,
+  },
+  newsSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewAllText: {
+    fontSize: theme.typography.fontSize.md,
+    fontFamily: theme.typography.fontFamily.semiBold,
+    color: "#bf3636",
+  },
+  newsItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: getResponsiveSpacing(theme.spacing.md),
+    paddingHorizontal: getResponsiveSpacing(theme.spacing.sm),
+    marginHorizontal: -getResponsiveSpacing(theme.spacing.sm),
+    borderRadius: theme.borderRadius.md,
+  },
+  newsItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.ui.divider,
+  },
+  newsContent: {
+    flex: 1,
+    marginRight: getResponsiveSpacing(theme.spacing.sm),
+  },
+  newsHeader: {
+    flexDirection: 'column',
+    marginBottom: getResponsiveSpacing(theme.spacing.xs),
+  },
+  newsMetadata: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  newsArrow: {
+    paddingTop: getResponsiveSpacing(theme.spacing.xs),
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 32,
+  },
+  newsTitle: {
+    fontSize: screenDimensions.isSmall ? theme.typography.fontSize.sm : theme.typography.fontSize.md,
+    fontFamily: theme.typography.fontFamily.semiBold,
+    color: theme.colors.text.primary,
+    lineHeight: screenDimensions.isSmall ? 18 : 20,
+  },
+  newsSummary: {
+    fontSize: theme.typography.fontSize.sm,
+    fontFamily: theme.typography.fontFamily.regular,
+    color: theme.colors.text.secondary,
+    lineHeight: 20,
+  },
+  newsTime: {
+    fontSize: theme.typography.fontSize.xs,
+    fontFamily: theme.typography.fontFamily.regular,
+    color: theme.colors.text.tertiary,
+  },
+  newsSource: {
+    fontSize: theme.typography.fontSize.xs,
+    fontFamily: theme.typography.fontFamily.medium,
+    color: theme.colors.primary.main,
+  },
+  // Next Race Section Styles
+  nextRaceWrapper: {
+    marginBottom: theme.spacing.lg,
+  },
+  nextRaceGradient: {
+    borderRadius: theme.borderRadius.xl,
+    padding: 2,
+  },
+  nextRaceCard: {
+    borderRadius: theme.borderRadius.xl,
+    padding: getResponsiveSpacing(theme.spacing.lg),
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  nextRaceHeader: {
+    marginBottom: getResponsiveSpacing(theme.spacing.lg),
+  },
+  nextRaceTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  nextRaceBadge: {
+    borderRadius: theme.borderRadius.md,
+    overflow: 'hidden',
+  },
+  nextRaceBadgeGradient: {
+    paddingHorizontal: getResponsiveSpacing(theme.spacing.md),
+    paddingVertical: getResponsiveSpacing(theme.spacing.sm),
+  },
+  nextRaceBadgeText: {
+    fontSize: theme.typography.fontSize.xs,
+    fontFamily: theme.typography.fontFamily.bold,
+    color: theme.colors.text.primary,
+    letterSpacing: 1,
+  },
+  countdownContainer: {
+    alignItems: 'center',
+  },
+  countdownCircle: {
+    width: screenDimensions.isSmall ? 60 : 70,
+    height: screenDimensions.isSmall ? 60 : 70,
+    borderRadius: screenDimensions.isSmall ? 30 : 35,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  countdownGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  countdownNumber: {
+    fontSize: screenDimensions.isSmall ? theme.typography.fontSize.lg : theme.typography.fontSize.xl,
+    fontFamily: theme.typography.fontFamily.bold,
+    color: theme.colors.text.primary,
+    lineHeight: screenDimensions.isSmall ? 20 : 24,
+  },
+  countdownLabel: {
+    fontSize: theme.typography.fontSize.xs,
+    fontFamily: theme.typography.fontFamily.medium,
+    color: theme.colors.text.secondary,
+    letterSpacing: 0.5,
+  },
+  nextRaceContent: {
+    gap: getResponsiveSpacing(theme.spacing.lg),
+  },
+  locationSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getResponsiveSpacing(theme.spacing.md),
+  },
+  enhancedFlagContainer: {
+    position: 'relative',
+    width: screenDimensions.isSmall ? 56 : 64,
+    height: screenDimensions.isSmall ? 42 : 48,
+    borderRadius: theme.borderRadius.md,
+    overflow: 'hidden',
+  },
+  enhancedFlagGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 2,
+  },
+  enhancedFlagImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+    borderRadius: theme.borderRadius.sm,
+  },
+  flagGlow: {
+    position: 'absolute',
+    top: -4,
+    left: -4,
+    right: -4,
+    bottom: -4,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.primary.main,
+    opacity: 0.2,
+    zIndex: -1,
+  },
+  locationInfo: {
+    flex: 1,
+  },
+  countryName: {
+    fontSize: theme.typography.fontSize.lg,
+    fontFamily: theme.typography.fontFamily.bold,
+    color: theme.colors.text.primary,
+    marginBottom: getResponsiveSpacing(theme.spacing.xs),
+  },
+  locationIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getResponsiveSpacing(theme.spacing.xs),
+  },
+  circuitName: {
+    fontSize: theme.typography.fontSize.sm,
+    fontFamily: theme.typography.fontFamily.medium,
+    color: theme.colors.text.tertiary,
+  },
+  raceNameSection: {
+    alignItems: 'center',
+  },
+  enhancedRaceName: {
+    fontSize: screenDimensions.isSmall ? theme.typography.fontSize.xl : theme.typography.fontSize.xxl,
+    fontFamily: theme.typography.fontFamily.bold,
+    color: theme.colors.text.primary,
+    textAlign: 'center',
+    letterSpacing: -0.5,
+    marginBottom: getResponsiveSpacing(theme.spacing.sm),
+  },
+  raceNameUnderline: {
+    width: '60%',
+    height: 3,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  underlineGradient: {
+    flex: 1,
+  },
+  raceDetailsSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getResponsiveSpacing(theme.spacing.sm),
+  },
+  statusIndicator: {
+    alignItems: 'flex-end',
+  },
+  liveIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: getResponsiveSpacing(theme.spacing.xs),
+  },
+  pulseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: theme.colors.status.success,
+    opacity: 0.8,
+  },
+  statusText: {
+    fontSize: theme.typography.fontSize.xs,
+    fontFamily: theme.typography.fontFamily.semiBold,
+    color: theme.colors.status.success,
+    letterSpacing: 0.5,
+  },
+  enhancedRaceActions: {
+    flexDirection: 'row',
+    gap: getResponsiveSpacing(theme.spacing.md),
+    marginTop: getResponsiveSpacing(theme.spacing.lg),
+  },
+  primaryActionButton: {
+    flex: 1.2,
+    borderRadius: theme.borderRadius.lg,
+    overflow: 'hidden',
+  },
+  primaryActionGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: getResponsiveSpacing(theme.spacing.md),
+    paddingHorizontal: getResponsiveSpacing(theme.spacing.xs),
+    gap: getResponsiveSpacing(4),
+    minHeight: 48,
+  },
+  primaryActionText: {
+    fontSize: theme.typography.fontSize.sm,
+    fontFamily: theme.typography.fontFamily.semiBold,
+    color: theme.colors.text.primary,
+    flexShrink: 1,
+  },
+  secondaryActionButton: {
+    flex: 1,
+    borderRadius: theme.borderRadius.lg,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  secondaryActionBlur: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: getResponsiveSpacing(theme.spacing.md),
+    paddingHorizontal: getResponsiveSpacing(theme.spacing.xs),
+    gap: getResponsiveSpacing(4),
+    minHeight: 48,
+  },
+  secondaryActionText: {
+    fontSize: theme.typography.fontSize.sm,
+    fontFamily: theme.typography.fontFamily.semiBold,
+    color: theme.colors.text.primary,
+    flexShrink: 1,
+  },
+  floatingElements: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    pointerEvents: 'none',
+  },
+  floatingDot: {
+    position: 'absolute',
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: theme.colors.primary.main,
+    opacity: 0.3,
+  },
+  floatingDot1: {
+    top: '20%',
+    right: '10%',
+  },
+  floatingDot2: {
+    bottom: '30%',
+    left: '15%',
+  },
+  floatingDot3: {
+    top: '60%',
+    right: '20%',
+  },
+});

@@ -2,7 +2,7 @@ import { Stack, useGlobalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Platform, SafeAreaView } from 'react-native';
-import { commonStyles } from '../styles/commonStyles';
+import { commonStyles, typography } from '../styles/commonStyles';
 import { useEffect, useState } from 'react';
 import { setupErrorLogging } from '../utils/errorLogger';
 import { useFonts } from 'expo-font';
@@ -26,7 +26,10 @@ const [fontsLoaded] = useFonts({
   Roboto_600SemiBold,
   Roboto_700Bold,
   'JetBrainsMono-Regular': require('../assets/fonts/JetBrainsMono-Regular.ttf'),
+  'JetBrainsMono-Medium': require('../assets/fonts/JetBrainsMono-Medium.ttf'),
+  'JetBrainsMono-SemiBold': require('../assets/fonts/JetBrainsMono-SemiBold.ttf'),
   'JetBrainsMono-Bold': require('../assets/fonts/JetBrainsMono-Bold.ttf'),
+  'JetBrainsMono-ExtraBold': require('../assets/fonts/JetBrainsMono-ExtraBold.ttf'),
 });
 
   useEffect(() => {

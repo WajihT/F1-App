@@ -4,19 +4,20 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   Dimensions,
   Alert,
   Modal,
 } from 'react-native';
 import { VictoryChart, VictoryLine, VictoryAxis, VictoryLegend, VictoryContainer } from 'victory-native';
-import { commonStyles, colors } from '../styles/commonStyles';
+import { commonStyles, colors, typography } from '../styles/commonStyles';
 import { fetchLapTimes, fetchSessionDrivers } from '../lib/api';
 import { LapTimeDataPoint, SessionDriver } from '../lib/types';
+import LoadingSpinnerF1 from './LoadingSpinnerF1';
 import Icon from './Icon';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Feather from '@expo/vector-icons/Feather';
 import Svg, { Path, Rect } from 'react-native-svg';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 // SVG Icon Components
 const TableIcon = ({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) => (
@@ -259,7 +260,7 @@ const LapTimesChart: React.FC<LapTimesChartProps> = ({ year, event, session }) =
           <MaterialIcons name="people" size={24} color={colors.primary} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
+          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '500', fontFamily: typography.fontFamily.semiBold }}>
             Select Drivers ({selectedDrivers.length}/{MAX_DRIVERS})
           </Text>
           <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
@@ -300,21 +301,26 @@ const LapTimesChart: React.FC<LapTimesChartProps> = ({ year, event, session }) =
           {/* Modal Header */}
           <View style={{
             flexDirection: 'row',
-            justifyContent: 'space-between',
             alignItems: 'flex-start',
             marginBottom: 20,
+            position: 'relative',
           }}>
-            <View style={{ flex: 1, paddingRight: 16 }}>
-              <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#fff', marginBottom: 4 }}>
+            {/* Centered text container */}
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <Text style={{ fontSize: 22, fontWeight: '500', color: '#fff', marginBottom: 4, fontFamily: typography.fontFamily.semiBold, textAlign: 'center' }}>
                 Select Drivers
               </Text>
-              <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 12, fontFamily: typography.fontFamily.regular, textAlign: 'center' }}>
                 Choose {MIN_DRIVERS}-{MAX_DRIVERS} drivers to compare lap times
               </Text>
             </View>
+            {/* Absolutely positioned X button */}
             <TouchableOpacity 
               onPress={handleDriverModalClose}
               style={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
                 padding: 6,
                 borderRadius: 10,
                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -425,15 +431,16 @@ const LapTimesChart: React.FC<LapTimesChartProps> = ({ year, event, session }) =
         disabled={selectedDrivers.length < MIN_DRIVERS || isLoadingDrivers}
       >
         <Feather name="bar-chart-2" size={20} color="#fff" />
-        <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>Load Chart</Text>
+        <Text style={{ color: '#fff', fontWeight: '500', fontSize: 16, fontFamily: typography.fontFamily.semiBold }}>Load Chart</Text>
       </TouchableOpacity>
       <Text style={{ 
         color: colors.textSecondary, 
-        fontSize: 13, 
+        fontSize: 11, 
         marginTop: 12, 
         textAlign: 'center',
         lineHeight: 18,
-        paddingHorizontal: 20
+        paddingHorizontal: 20,
+        fontFamily: typography.fontFamily.regular
       }}>
         Select drivers and click load to view lap time comparison
       </Text>
@@ -796,10 +803,7 @@ const LapTimesChart: React.FC<LapTimesChartProps> = ({ year, event, session }) =
         onPress={() => setViewMode('table')}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <TableIcon 
-            size={14} 
-            color={viewMode === 'table' ? '#fff' : colors.textSecondary} 
-          />
+          <MaterialCommunityIcons name="table-large" size={14} color="white" />
           <Text style={{ 
             color: viewMode === 'table' ? '#fff' : colors.textSecondary, 
             fontWeight: viewMode === 'table' ? 'bold' : 'normal',
@@ -842,8 +846,8 @@ const LapTimesChart: React.FC<LapTimesChartProps> = ({ year, event, session }) =
     if (isLoadingDrivers) {
       return (
         <View style={{ alignItems: 'center', padding: 40 }}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={{ color: colors.textSecondary, marginTop: 12 }}>Loading drivers...</Text>
+          <LoadingSpinnerF1 size={48} color={colors.primary} />
+          
         </View>
       );
     }
@@ -862,8 +866,8 @@ const LapTimesChart: React.FC<LapTimesChartProps> = ({ year, event, session }) =
         <View>
           {renderDriverSelector()}
           <View style={{ alignItems: 'center', padding: 40 }}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={{ color: colors.textSecondary, marginTop: 12 }}>Loading lap times...</Text>
+            <LoadingSpinnerF1 size={48} color={colors.primary} />
+            
           </View>
         </View>
       );
@@ -907,7 +911,7 @@ const LapTimesChart: React.FC<LapTimesChartProps> = ({ year, event, session }) =
 
   return (
     <View style={{ padding: 0, backgroundColor: "transparent" }}>
-            <Text style={[commonStyles.title, { marginBottom: 16, textAlign: 'center' }]}>
+            <Text style={[commonStyles.title, { marginBottom: 16, textAlign: 'center', fontSize: 24 }]}>
               Lap Times Comparison
             </Text>
       <ScrollView style={{ flex: 1, padding: 0, backgroundColor: "transparent" }}>

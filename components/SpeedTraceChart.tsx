@@ -4,6 +4,7 @@ import { LineChart } from 'react-native-chart-kit';
 import { commonStyles } from '../styles/commonStyles';
 import { fetchSessionDrivers, fetchSpeedData } from '../lib/api';
 import { SessionDriver } from '../lib/types';
+import LoadingSpinnerF1 from './LoadingSpinnerF1';
 
 interface SpeedDataPoint {
   Distance: number;
@@ -162,7 +163,8 @@ const SpeedTraceChart: React.FC<SpeedTraceChartProps> = ({
           alignItems: 'center',
           marginTop: 16,
         }}>
-          <Text style={{ color: '#fff', fontSize: 16 }}>Loading...</Text>
+          <LoadingSpinnerF1 size={48} color="#ef4444" />
+          <Text style={{ color: '#fff', fontSize: 16, marginTop: 12 }}>Loading...</Text>
         </View>
       );
     }

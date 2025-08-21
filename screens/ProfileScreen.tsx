@@ -1,14 +1,14 @@
 import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, Image, Modal, Switch, Platform } from 'react-native';
-import { commonStyles, colors } from '../styles/commonStyles';
+import { commonStyles, colors, typography } from '../styles/commonStyles';
 import Icon from '../components/Icon';
 import Button from '../components/Button';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState, useRef } from 'react';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
 import TireIcon from "../assets/TireIcon";
 import { Animated } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import CustomDatePicker from '../components/CustomDatePicker';
 import {
   RedBullLogo,
   FerrariLogo,
@@ -51,7 +51,7 @@ const f1Teams = [
 
 const menuItems = [
   { id: 1, title: 'Notifications', icon: 'notifications', hasSwitch: true },
-  { id: 2, title: 'Favorite Teams', icon: 'heart', hasSwitch: false },
+  { id: 2, title: 'Favorite Team', icon: 'heart', hasSwitch: false },
   { id: 3, title: 'Race Reminders', icon: 'alarm', hasSwitch: true },
   { id: 4, title: 'Data & Privacy', icon: 'shield-checkmark', hasSwitch: false },
   { id: 5, title: 'About', icon: 'information-circle', hasSwitch: false },
@@ -105,7 +105,7 @@ export default function ProfileScreen() {
         setModalType('notifications');
         setModalVisible(true);
         break;
-      case 2: // Favorite Teams
+      case 2: // Favorite Team
         setModalType('teams');
         setModalVisible(true);
         break;
@@ -249,8 +249,8 @@ export default function ProfileScreen() {
 
               {modalType === 'teams' && (
                 <View>
-                  <Text style={[commonStyles.text, { marginBottom: 20 }]}>
-                    Select your favorite F1 team to personalize your experience.
+                  <Text style={[commonStyles.text, { marginBottom: 20 , fontSize: 14 }]}>
+                    Select your favorite F1 team
                   </Text>
                   {f1Teams.map((team, index) => {
                     const { LogoComponent } = team;
@@ -389,10 +389,11 @@ export default function ProfileScreen() {
               <TireIcon width={28} height={28} fill="#ef4444" />
             </View>
             <Text style={{
-              fontWeight: 'bold',
-              fontSize: 24,
+              fontWeight: '500',
+              fontSize: 23,
               color: '#fff',
               letterSpacing: -1,
+              fontFamily: typography.fontFamily.bold,
             }}>
               Profile
             </Text>
@@ -480,7 +481,7 @@ export default function ProfileScreen() {
                   }}
                 >
                   <Icon name="create" size={16} style={{ color: colors.accent }} />
-                  <Text style={{ color: colors.accent, fontWeight: '600' }}>Edit Profile</Text>
+                  <Text style={{ color: colors.accent, fontWeight: '600', fontFamily: typography.fontFamily.semiBold }}>Edit Profile</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -579,25 +580,34 @@ export default function ProfileScreen() {
         marginBottom: 20,
       }}
     >
-      <Text style={[commonStyles.textSecondary, { marginBottom: 4 }]}>Member Since</Text>
-      <Text style={[commonStyles.text, { color: colors.primary }]}>
-        📅 {new Date(editedStats.memberSince).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })}
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Text style={[commonStyles.textSecondary, { marginBottom: 0 }]}>Member Since</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Icon name="calendar" size={18} style={{ color: colors.primary, marginRight: 8 }} />
+          <Text style={[commonStyles.text, { color: colors.primary }]}>
+            {new Date(editedStats.memberSince).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+          </Text>
+        </View>
+      </View>
     </TouchableOpacity>
 
-    {showDatePicker && (
-      <DateTimePicker
-        value={new Date(editedStats.memberSince)}
-        mode="date"
-        display="default"
-        onChange={(_, selectedDate) => {
-          setShowDatePicker(false);
-          if (selectedDate) {
-            setEditedStats({ ...editedStats, memberSince: selectedDate.toISOString().split('T')[0] });
-          }
-        }}
-      />
-    )}
+    {/* Custom Date Picker */}
+    <CustomDatePicker
+      isVisible={showDatePicker}
+      date={new Date(editedStats.memberSince)}
+      onConfirm={(selectedDate) => {
+        const dateString = selectedDate.toISOString().split('T')[0];
+        setEditedStats({ ...editedStats, memberSince: dateString });
+        setShowDatePicker(false)
+      }}
+      onCancel={() => setShowDatePicker(false)}
+      title="Select Member Since Date"
+      confirmText="Confirm"
+      cancelText="Cancel"
+    />
+
+
+
 
     <View style={{ flexDirection: 'row', gap: 12 }}>
       <Button 
@@ -620,7 +630,7 @@ export default function ProfileScreen() {
           saveStats(editedStats);
           setEditing(false);
         }}
-        style={{ flex: 1 }}
+        
       />
     </View>
   </View>
@@ -628,7 +638,7 @@ export default function ProfileScreen() {
 
         {/* Stats */}
         <View style={commonStyles.section}>
-          <Text style={[commonStyles.subtitle, { marginBottom: 16 }]}>My F1 Stats</Text>
+          <Text style={[commonStyles.subtitle, { marginBottom: 16, textAlign: 'center' }]}>My F1 Stats</Text>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <View style={[commonStyles.card, { 
               flex: 1, 
@@ -671,7 +681,7 @@ export default function ProfileScreen() {
 
         {/* Favorites */}
         <View style={commonStyles.section}>
-          <Text style={[commonStyles.subtitle, { marginBottom: 16 }]}>Favorites</Text>
+          <Text style={[commonStyles.subtitle, { marginBottom: 16, textAlign: 'center' }]}>Favorites</Text>
           <View style={[commonStyles.card, { backgroundColor: colors.darkCard }]}>
             <View style={{ marginBottom: 16 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
@@ -696,7 +706,7 @@ export default function ProfileScreen() {
 
         {/* Settings Menu */}
         <View style={commonStyles.section}>
-          <Text style={[commonStyles.subtitle, { marginBottom: 16 }]}>Settings</Text>
+          <Text style={[commonStyles.subtitle, { marginBottom: 16, textAlign: 'center' }]}>Settings</Text>
           {menuItems.map((item) => (
             <TouchableOpacity
               key={item.id}

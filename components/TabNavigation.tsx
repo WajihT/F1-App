@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity } from 'react-native';
-import { commonStyles, colors } from '../styles/commonStyles';
+import { commonStyles, colors, typography } from '../styles/commonStyles';
 import Icon from './Icon';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Feather from '@expo/vector-icons/Feather';
@@ -46,10 +46,11 @@ export default function TabNavigation({ activeTab, onTabPress }: TabNavigationPr
             <Text
               style={{
                 color: activeTab === tab.id ? 'white' : colors.grey,
-                fontWeight: activeTab === tab.id ? '700' : '400',
+                fontWeight: activeTab === tab.id ? '500' : '500',
                 fontSize: 13,
                 marginTop: 2,
                 letterSpacing: 0.2,
+                fontFamily: typography.fontFamily.bold
               }}
             >
               {tab.label}

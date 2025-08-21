@@ -8,7 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
-import { commonStyles, colors } from '../styles/commonStyles';
+import { commonStyles, colors, typography } from '../styles/commonStyles';
 import Icon from '../components/Icon';
 import SeasonSelector from '../components/SeasonSelector';
 import { F1DataService, Race, RaceResults } from '../services/f1DataService';
@@ -68,11 +68,13 @@ flagImage: {
     fontWeight: '700',
     fontSize: 16,
     color: colors.text,
+    fontFamily: typography.fontFamily.bold,
   },
   cardSub: {
     fontSize: 12,
     color: colors.grey,
     marginTop: 2,
+    fontFamily: typography.fontFamily.regular,
   },
 });
 
@@ -173,7 +175,7 @@ function InfoCardPlaceholder({ icon, label }: { icon: React.ReactNode; label: st
       }}
     >
       <View>
-        <Text style={{ color: '#9ca3af', fontSize: 13, fontWeight: '500', marginBottom: 6 }}>
+        <Text style={{ color: '#9ca3af', fontSize: 13, fontWeight: '500', marginBottom: 6, fontFamily: typography.fontFamily.regular }}>
           {label}
         </Text>
         <View style={{ width: 80, height: 18, backgroundColor: '#232a3a', borderRadius: 8, marginBottom: 4 }} />
@@ -381,13 +383,14 @@ const getRoundPillTextColor = (round: number) => {
 
     <Text
       style={{
-        fontWeight: 'bold',
-        fontSize: 24,
+        fontWeight: '500',
+        fontSize: 22,
         color: '#fff',
         letterSpacing: -1,
+        fontFamily: typography.fontFamily.bold,
       }}
     >
-      Schedule <Text style={{ color: '#ef4444' }}>& Results</Text>
+      Schedule <Text style={{ color: '#ef4444', fontFamily: typography.fontFamily.semiBold }}>& Results</Text>
     </Text>
   </TouchableOpacity>
 </View>
@@ -445,14 +448,14 @@ const getRoundPillTextColor = (round: number) => {
             borderColor: '#232a3a',
           }}>
             <View>
-              <Text style={{ color: '#9ca3af', fontSize: 13, fontWeight: '500', marginBottom: 2 }}>
+              <Text style={{ color: '#9ca3af', fontSize: 13, fontWeight: '500', marginBottom: 2, fontFamily: typography.fontFamily.regular }}>
                 Race Winner
               </Text>
-              <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>
+              <Text style={{ color: '#fff', fontSize: 20, fontWeight: '500', fontFamily: typography.fontFamily.bold }}>
                 {getWinnerDriver()}
               </Text>
               {getWinnerTeam() && (
-                <Text style={{ color: '#9ca3af', fontSize: 14 }}>
+                <Text style={{ color: '#9ca3af', fontSize: 14, fontFamily: typography.fontFamily.regular }}>
                   {getWinnerTeam()}
                 </Text>
               )}
@@ -472,14 +475,14 @@ const getRoundPillTextColor = (round: number) => {
             borderColor: '#232a3a',
           }}>
             <View>
-              <Text style={{ color: '#9ca3af', fontSize: 13, fontWeight: '500', marginBottom: 2 }}>
+              <Text style={{ color: '#9ca3af', fontSize: 13, fontWeight: '500', marginBottom: 2, fontFamily: typography.fontFamily.regular }}>
                 Pole Position
               </Text>
-              <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>
+              <Text style={{ color: '#fff', fontSize: 20, fontWeight: '500', fontFamily: typography.fontFamily.bold }}>
                 {getPoleDriver() ?? getPoleTime() ?? 'TBD'}
               </Text>
               {getPoleTime() && (
-                <Text style={{ color: '#9ca3af', fontSize: 14 }}>
+                <Text style={{ color: '#9ca3af', fontSize: 14, fontFamily: typography.fontFamily.regular }}>
                   {getPoleTime()}
                 </Text>
               )}
@@ -499,14 +502,14 @@ const getRoundPillTextColor = (round: number) => {
             borderColor: '#232a3a',
           }}>
             <View>
-              <Text style={{ color: '#9ca3af', fontSize: 13, fontWeight: '500', marginBottom: 2 }}>
+              <Text style={{ color: '#9ca3af', fontSize: 13, fontWeight: '500', marginBottom: 2, fontFamily: typography.fontFamily.regular }}>
                 Fastest Lap
               </Text>
-              <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold' }}>
+              <Text style={{ color: '#fff', fontSize: 20, fontWeight: '500', fontFamily: typography.fontFamily.bold }}>
                 {getFastestDriver() ?? getFastestTime() ?? 'TBD'}
               </Text>
               {getFastestTime() && (
-                <Text style={{ color: '#9ca3af', fontSize: 14 }}>
+                <Text style={{ color: '#9ca3af', fontSize: 14, fontFamily: typography.fontFamily.regular }}>
                   {getFastestTime()}
                 </Text>
               )}
@@ -569,8 +572,9 @@ const getRoundPillTextColor = (round: number) => {
     <Text
       style={{
         color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 15,
+        fontWeight: '500',
+        fontSize: 14.5,
+        fontFamily: typography.fontFamily.bold,
       }}
       numberOfLines={1}
       ellipsizeMode="tail"
@@ -606,10 +610,11 @@ const getRoundPillTextColor = (round: number) => {
           <Text
             key={idx}
             style={{
-              flex: idx === 1 ? 2 : 1,
+              flex: idx === 1 ? 2 : idx === 3 ? 1.5 : 1,
               color: '#9ca3af',
               fontSize: 13,
-              fontWeight: 'bold',
+              fontWeight: '500',
+              fontFamily: typography.fontFamily.bold,
               textAlign: 'center', // ✅ Centered header text
             }}
           >
@@ -633,34 +638,35 @@ const getRoundPillTextColor = (round: number) => {
           }}
         >
           {/* Position */}
-          <Text style={{ flex: 1, color: '#fff', fontSize: 14, textAlign: 'center' }}>
+          <Text style={{ flex: 1, color: '#fff', fontSize: 14, textAlign: 'center', fontFamily: typography.fontFamily.regular }}>
             {index + 1}
           </Text>
 
           {/* Driver */}
-          <Text style={{ flex: 2, color: '#fff', fontSize: 14, textAlign: 'center' }}>
+          <Text style={{ flex: 2, color: '#fff', fontSize: 14, textAlign: 'center', fontFamily: typography.fontFamily.regular }}>
             {result.fullName ?? 'Unknown'}
           </Text>
 
           {/* Grid */}
-          <Text style={{ flex: 1, color: '#fff', fontSize: 14, textAlign: 'center' }}>
+          <Text style={{ flex: 1, color: '#fff', fontSize: 14, textAlign: 'center', fontFamily: typography.fontFamily.regular }}>
             {result.gridPosition ?? '-'}
           </Text>
 
           {/* Status */}
           <Text
             style={{
-              flex: 1,
+              flex: 1.5,
               color: result.status?.toLowerCase().includes('dnf') ? '#f87171' : '#9ca3af',
               fontSize: 14,
               textAlign: 'center',
+              fontFamily: typography.fontFamily.regular,
             }}
           >
             {result.resultStatus ?? 'N/A'}
           </Text>
 
           {/* Points */}
-          <Text style={{ flex: 1, color: '#fff', fontSize: 14, textAlign: 'center' }}>
+          <Text style={{ flex: 1, color: '#fff', fontSize: 14, textAlign: 'center', fontFamily: typography.fontFamily.regular }}>
             {result.points != null ? Math.round(result.points) : '0'}
           </Text>
         </View>
@@ -769,7 +775,7 @@ const getRoundPillTextColor = (round: number) => {
     fontWeight: '400',
     marginBottom: 16,
     textAlign: 'center',
-    fontFamily: 'Roboto_400Regular',
+    fontFamily: typography.fontFamily.regular,
   }}
 >
   {selectedSeason} Season Overview
@@ -795,28 +801,44 @@ const getRoundPillTextColor = (round: number) => {
                       transform: [{ scale: pressed ? 0.98 : 1 }],
                     })}
                   >
-                    {/* Top: Flag + Round */}
-                    <View style={[commonStyles.row, { justifyContent: 'space-between', marginBottom: 12 }]}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    {/* Round badge positioned absolutely */}
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: 16,
+                        right: 16,
+                        backgroundColor: getRoundPillColor(race.round ?? 0),
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 999,
+                        zIndex: 1,
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, color: getRoundPillTextColor(race.round ?? 0), fontWeight: '600', fontFamily: typography.fontFamily.semiBold }}>
+                        Round {race.round ?? '?'}
+                      </Text>
+                    </View>
+
+                    {/* Top: Flag + Title (with space for round badge) */}
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12, marginRight: 80 }}>
+                      <View style={{ marginTop: 4 }}>
                         {renderFlag(race.country)}
-                        <View style={{ marginLeft: 8 }}>
-                          <Text style={{ fontWeight: '700', fontSize: 15, color: colors.text }}>
-                            {race.name}
-                          </Text>
-                          <Text style={styles.cardSub}>{race.location}</Text>
-                        </View>
                       </View>
-                      <View
-                        style={{
-                          backgroundColor: getRoundPillColor(race.round ?? 0),
-                          paddingHorizontal: 10,
-                          paddingVertical: 4,
-                          borderRadius: 999,
-                        }}
-                      >
-                        <Text style={{ fontSize: 12, color: getRoundPillTextColor(race.round ?? 0), fontWeight: '600' }}>
-                          Round {race.round ?? '?'}
+                      <View style={{ marginLeft: 8, flex: 1 }}>
+                        <Text 
+                          style={{ 
+                            fontWeight: 'normal', 
+                            fontSize: 15, 
+                            color: colors.text, 
+                            fontFamily: typography.fontFamily.bold,
+                            flexWrap: 'wrap',
+                            flexShrink: 1
+                          }}
+                          numberOfLines={2}
+                        >
+                          {race.name}
                         </Text>
+                        <Text style={styles.cardSub}>{race.location}</Text>
                       </View>
                     </View>
 
@@ -860,6 +882,7 @@ const getRoundPillTextColor = (round: number) => {
                           : '#4ADE80',
                       fontSize: 12,
                       fontWeight: '600',
+                      fontFamily: typography.fontFamily.semiBold,
                     }}
                   >
                     {getRaceStatus(race.date).toUpperCase()}
@@ -877,6 +900,7 @@ const getRoundPillTextColor = (round: number) => {
                           fontWeight: '600',
                           color: colors.text,
                           marginLeft: 8, // 🔁 Aligned with icon
+                          fontFamily: typography.fontFamily.semiBold,
                         }}
                       >
                         {race.winner}
@@ -889,6 +913,7 @@ const getRoundPillTextColor = (round: number) => {
                           fontSize: 13,
                           color: 'white',
                           marginLeft: 8, // 🔁 Aligned with icon
+                          fontFamily: typography.fontFamily.regular,
                         }}
                       >
                         {race.winnerTeam}
@@ -896,7 +921,7 @@ const getRoundPillTextColor = (round: number) => {
                     </View>
                   </View>
                 ) : (
-                  <Text style={{ fontSize: 13, fontStyle: 'italic', color: colors.grey }}>
+                  <Text style={{ fontSize: 13, fontStyle: 'italic', color: colors.grey, fontFamily: typography.fontFamily.regular }}>
                     Results pending
                   </Text>
                 )}

@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
-import { commonStyles, colors } from '../styles/commonStyles';
+import { commonStyles, colors, typography } from '../styles/commonStyles';
 import SeasonSelector from '../components/SeasonSelector';
 import { F1DataService, Driver, Constructor } from '../services/f1DataService';
 //import { Trophy, Medal, Users, User } from 'lucide-react-native';
@@ -222,13 +222,14 @@ function ConstructorCardPlaceholder({ position }: { position: number }) {
 
     <Text
       style={{
-        fontWeight: 'bold',
-        fontSize: 24,
+        fontWeight: '500',
+        fontSize: 22,
         color: '#fff',
         letterSpacing: -1,
+        fontFamily: typography.fontFamily.bold,
       }}
     >
-      Championship <Text style={{ color: '#ef4444' }}>Standings</Text>
+      Championship <Text style={{ color: '#ef4444', fontFamily: typography.fontFamily.semiBold }}>Standings</Text>
     </Text>
   </TouchableOpacity>
 </View>
@@ -264,7 +265,6 @@ function ConstructorCardPlaceholder({ position }: { position: number }) {
         {
           fontWeight: '600',
           marginLeft: 8,
-          fontFamily: 'JetBrainsMono-Regular',
           color: activeTab === 'drivers' ? colors.accent : colors.text,
         },
       ]}
@@ -297,7 +297,6 @@ function ConstructorCardPlaceholder({ position }: { position: number }) {
         {
           fontWeight: '600',
           marginLeft: 8,
-          fontFamily: 'JetBrainsMono-Regular',
           color: activeTab === 'constructors' ? colors.accent : colors.text,
         },
       ]}
@@ -343,16 +342,16 @@ function ConstructorCardPlaceholder({ position }: { position: number }) {
                     >
                       <View style={commonStyles.row}>
                         <View style={[commonStyles.centerContent, { width: 40 }]}>
-                          <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 16, color: textColor }}>
+                          <Text style={[commonStyles.text, { fontSize: 20, color: textColor }]}>
                             {driver.position}
                           </Text>
                         </View>
 
                         <View style={{ flex: 1, marginLeft: 1 }}>
-                          <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 14, color: textColor }}>
+                          <Text style={[commonStyles.text, { fontSize: 14, color: textColor }]}>
                             {driver.name}
                           </Text>
-                          <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 12, color: textColor }}>
+                          <Text style={[commonStyles.textSecondary, { fontSize: 13, color: textColor }]}>
                             {driver.team}
                           </Text>
                         </View>
@@ -389,7 +388,7 @@ function ConstructorCardPlaceholder({ position }: { position: number }) {
                           </View>
                         </View>
                         <View style={{ alignItems: 'center', marginRight: 1 }}>
-                            <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 16, color: textColor }}>
+                            <Text style={[commonStyles.text, { fontSize: 16, color: textColor }]}>
                               {driver.points}
                             </Text>
                             <Text style={[commonStyles.textSecondary, { fontSize: 10 }]}>PTS</Text>
@@ -432,6 +431,7 @@ function ConstructorCardPlaceholder({ position }: { position: number }) {
                             {
                               fontSize: 20,
                               color: textColor,
+                              fontFamily: typography.fontFamily.semiBold,
                             }
                           ]}>
                             {constructor.position}
@@ -439,16 +439,16 @@ function ConstructorCardPlaceholder({ position }: { position: number }) {
                         </View>
 
                         <View style={{ flex: 1, marginLeft: 16 }}>
-                          <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 14, color: textColor }}>
+                          <Text style={[commonStyles.text, { fontSize: 16, color: textColor }]}>
                             {constructor.name}
                           </Text>
                         </View>
 
                         <View style={commonStyles.centerContent}>
-                          <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 14, color: textColor }}>
+                          <Text style={[commonStyles.text, { fontSize: 14, color: textColor }]}>
                             {constructor.points} PTS
                           </Text>
-                          <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 14, color: textColor }}>
+                          <Text style={[commonStyles.text, { fontSize: 14, color: textColor }]}>
                             {constructor.wins} wins
                           </Text>
                         </View>

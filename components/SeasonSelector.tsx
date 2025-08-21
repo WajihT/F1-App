@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet } from 'react-native';
-import { commonStyles, colors } from '../styles/commonStyles';
+import { commonStyles, colors, typography } from '../styles/commonStyles';
 import Icon from './Icon';
 import { Season, getAvailableSeasons } from '../services/f1DataService';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -65,6 +65,7 @@ return (
           fontSize: 16,
           textAlign: 'center',
           flex: 1,
+          fontFamily: typography.fontFamily.semiBold,
         }}
         numberOfLines={1}
         ellipsizeMode="tail"
@@ -82,7 +83,7 @@ return (
             marginRight: 6,
           }}
         >
-          <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600', textAlign: 'center' }}>F1</Text>
+          <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600', textAlign: 'center', fontFamily: typography.fontFamily.semiBold }}>F1</Text>
         </View>
         <Icon
           name="chevron-down"
@@ -108,7 +109,7 @@ return (
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Season</Text>
-            <Text style={styles.seasonsCount}>{seasons.length} seasons</Text>
+            <Text style={styles.seasonsCount}>{seasons.length} Seasons</Text>
             <TouchableOpacity
               onPress={() => setIsModalVisible(false)}
               style={styles.closeButton}
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff', // text-white
-    fontFamily: 'Roboto_600SemiBold',
+    fontFamily: typography.fontFamily.semiBold,
   },
   modalOverlay: {
     flex: 1,
@@ -204,7 +205,8 @@ const styles = StyleSheet.create({
     color: '#9ca3af', // text-gray-400
     textTransform: 'uppercase',
     letterSpacing: 1.5,
-    fontWeight: '700',
+    fontWeight: '500',
+    fontFamily: typography.fontFamily.bold,
   },
   closeButton: {
     padding: 4,
@@ -229,17 +231,17 @@ const styles = StyleSheet.create({
   seasonText: {
     fontSize: 16,
     color: '#fff', // text-white
-    fontFamily: 'Roboto_400Regular',
+    fontFamily: typography.fontFamily.regular,
   },
   selectedSeasonText: {
     fontWeight: '600',
     color: '#fff', // data-[state=checked]:text-white
-    fontFamily: 'Roboto_600SemiBold',
+    fontFamily: typography.fontFamily.semiBold,
   },
   yearMono: {
     width: 48,
     color: '#9ca3af', // text-gray-400
-    fontFamily: 'monospace',
+    fontFamily: typography.fontFamily.regular,
     fontSize: 14,
   },
   formulaText: {
@@ -247,6 +249,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     color: '#fff',
     fontSize: 15,
+    fontFamily: typography.fontFamily.semiBold,
   },
   selectedDot: {
     marginLeft: 'auto',
@@ -258,5 +261,6 @@ const styles = StyleSheet.create({
   seasonsCount: {
     fontSize: 12,
     color: '#6b7280', // text-gray-500
+    fontFamily: typography.fontFamily.regular,
   },
 });

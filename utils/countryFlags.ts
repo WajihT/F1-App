@@ -58,16 +58,16 @@ export const countryFlags: { [key: string]: string } = {
 
 export const getCountryFlag = (country: string): string => {
   if (!country || typeof country !== 'string') {
-    console.log(`Country is undefined or not a string, using default flag`);
+    //console.log(`Country is undefined or not a string, using default flag`);
     return 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=80&h=60&fit=crop&crop=center';
   }
 
-  console.log(`Getting flag for country: ${country}`);
+  //console.log(`Getting flag for country: ${country}`);
   const normalizedCountry = country.trim();
   
   // Direct lookup
   if (countryFlags[normalizedCountry]) {
-    console.log(`Found direct match for ${normalizedCountry}`);
+    //console.log(`Found direct match for ${normalizedCountry}`);
     return countryFlags[normalizedCountry];
   }
   
@@ -76,7 +76,7 @@ export const getCountryFlag = (country: string): string => {
   for (const key of countryKeys) {
     if (normalizedCountry.toLowerCase().includes(key.toLowerCase()) || 
         key.toLowerCase().includes(normalizedCountry.toLowerCase())) {
-      console.log(`Found partial match: ${key} for ${normalizedCountry}`);
+      //console.log(`Found partial match: ${key} for ${normalizedCountry}`);
       return countryFlags[key];
     }
   }
@@ -84,17 +84,17 @@ export const getCountryFlag = (country: string): string => {
   // Special handling for common variations
   if (normalizedCountry.toLowerCase().includes('britain') || 
       normalizedCountry.toLowerCase().includes('england')) {
-    console.log(`Matched Britain/England to UK for ${normalizedCountry}`);
+    //console.log(`Matched Britain/England to UK for ${normalizedCountry}`);
     return 'https://flagcdn.com/w80/gb.png';
   }
   
   if (normalizedCountry.toLowerCase().includes('america') || 
       normalizedCountry.toLowerCase().includes('usa')) {
-    console.log(`Matched America/USA to US for ${normalizedCountry}`);
+    //console.log(`Matched America/USA to US for ${normalizedCountry}`);
     return 'https://flagcdn.com/w80/us.png';
   }
   
   // Default flag for unknown countries - using a generic racing flag
-  console.log(`No match found for ${normalizedCountry}, using default flag`);
+  //console.log(`No match found for ${normalizedCountry}, using default flag`);
   return 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=80&h=60&fit=crop&crop=center';
 };

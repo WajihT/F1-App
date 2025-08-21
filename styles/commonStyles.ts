@@ -16,6 +16,17 @@ export const colors = {
   darkCard: '#111112', // Dark Card Background
 };
 
+// Typography constants for easy font management
+export const typography = {
+  fontFamily: {
+    regular: 'JetBrainsMono-Regular',
+    medium: 'JetBrainsMono-Medium',
+    semiBold: 'JetBrainsMono-SemiBold',
+    bold: 'JetBrainsMono-Bold',
+    extraBold: 'JetBrainsMono-ExtraBold',
+  },
+};
+
 export const buttonStyles = StyleSheet.create({
   primary: {
     backgroundColor: colors.primary,
@@ -37,6 +48,34 @@ export const buttonStyles = StyleSheet.create({
 });
 
 export const commonStyles = StyleSheet.create({
+
+  // Default text style - applies JetBrainsMono to all text
+  defaultText: {
+    fontFamily: typography.fontFamily.regular,
+  },
+
+  // Additional text variants for easy use
+  textBold: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: colors.text,
+    lineHeight: 24,
+    fontFamily: typography.fontFamily.bold,
+  },
+  textMedium: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: colors.text,
+    lineHeight: 24,
+    fontFamily: typography.fontFamily.medium,
+  },
+  textSemiBold: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: colors.text,
+    lineHeight: 24,
+    fontFamily: typography.fontFamily.semiBold,
+  },
 
     input: {
     borderWidth: 1,
@@ -67,31 +106,31 @@ export const commonStyles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '500',
     color: colors.text,
     marginBottom: 8,
-    fontFamily: 'Roboto_700Bold',
+    fontFamily: typography.fontFamily.bold,
   },
   subtitle: {
     fontSize: 20,
     fontWeight: '600',
     color: colors.text,
     marginBottom: 16,
-    fontFamily: 'Roboto_600SemiBold',
+    fontFamily: typography.fontFamily.semiBold,
   },
   text: {
     fontSize: 16,
-    fontWeight: '400',
+    fontWeight: '500',
     color: colors.text,
     lineHeight: 24,
-    fontFamily: 'Roboto_400Regular',
+    fontFamily: typography.fontFamily.semiBold,
   },
   textSecondary: {
     fontSize: 14,
     fontWeight: '400',
     color: colors.textSecondary,
     lineHeight: 20,
-    fontFamily: 'Roboto_400Regular',
+    fontFamily: typography.fontFamily.regular,
   },
   section: {
     width: '100%',
@@ -132,7 +171,7 @@ export const commonStyles = StyleSheet.create({
   tabText: {
     fontSize: 12,
     marginTop: 4,
-    fontFamily: 'Roboto_400Regular',
+    fontFamily: typography.fontFamily.regular,
   },
   header: {
     backgroundColor: colors.backgroundAlt,
@@ -146,6 +185,6 @@ export const commonStyles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
-    fontFamily: 'Roboto_700Bold',
+    fontFamily: typography.fontFamily.bold,
   },
 });

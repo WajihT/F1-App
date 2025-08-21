@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, FlatList } from 'react-native';
+import { MaterialIcons, AntDesign, Feather } from '@expo/vector-icons';
 import { fetchTireStrategy, fetchRaceResults, fetchStintAnalysis } from '../lib/api';
 import { DriverStrategy, TireStint, StintAnalysisData, LapDetail } from '../lib/types';
+import { commonStyles, colors, typography } from '../styles/commonStyles';
+import Svg, { Path, Rect } from 'react-native-svg';
+import LoadingSpinnerF1 from './LoadingSpinnerF1';
 
 interface TireStrategyProps {
   year: number;
@@ -13,7 +17,12 @@ interface RaceResult {
   position: number;
   driverCode: string;
 }
-
+const ChartLineIcon = ({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <Path d="M3 3v16a2 2 0 0 0 2 2h16" />
+    <Path d="m19 9-5 5-4-4-3 3" />
+  </Svg>
+);
 // Define tire compound colors
 const tireCompoundColors: { [key: string]: string } = {
   SOFT: '#ef4444',      // Red
@@ -37,6 +46,8 @@ const TireStrategy: React.FC<TireStrategyProps> = ({ year, event, session }) => 
   const [error, setError] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<'overview' | 'analysis'>('overview');
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Helper functions for stint analysis
   const formatLapTime = (totalSeconds: number | null | undefined): string => {
@@ -76,6 +87,55 @@ const TireStrategy: React.FC<TireStrategyProps> = ({ year, event, session }) => 
     if (denominator === 0) return 0;
 
     return (n * sumXY - sumX * sumY) / denominator;
+  };
+
+  // Sorting function
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortData = (data: any[], column: string, direction: 'asc' | 'desc') => {
+    return [...data].sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (column) {
+        case 'driver':
+          aValue = a.driverCode;
+          bValue = b.driverCode;
+          break;
+        case 'length':
+          aValue = a.stintLength;
+          bValue = b.stintLength;
+          break;
+        case 'fastest':
+          aValue = a.fastestLap || Infinity;
+          bValue = b.fastestLap || Infinity;
+          break;
+        case 'consistency':
+          aValue = a.consistency || Infinity;
+          bValue = b.consistency || Infinity;
+          break;
+        case 'degradation':
+          aValue = a.degradation || 0;
+          bValue = b.degradation || 0;
+          break;
+        default:
+          return 0;
+      }
+      
+      if (typeof aValue === 'string') {
+        const comparison = aValue.localeCompare(bValue);
+        return direction === 'asc' ? comparison : -comparison;
+      } else {
+        const comparison = aValue - bValue;
+        return direction === 'asc' ? comparison : -comparison;
+      }
+    });
   };
 
   // Create a map of driver codes to their finishing positions
@@ -162,7 +222,7 @@ const TireStrategy: React.FC<TireStrategyProps> = ({ year, event, session }) => 
         return (
           <View key={compound} style={styles.legendItem}>
             <View style={[styles.legendColor, { backgroundColor: color }]} />
-            <Text style={styles.legendText}>
+            <Text style={[styles.legendText, { fontFamily: typography.fontFamily.regular }]}>
               {compound.charAt(0) + compound.slice(1).toLowerCase()}
             </Text>
           </View>
@@ -175,8 +235,8 @@ const TireStrategy: React.FC<TireStrategyProps> = ({ year, event, session }) => 
     if (loading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#ef4444" />
-          <Text style={styles.loadingText}>Loading strategy data...</Text>
+          <LoadingSpinnerF1 size={48} color="#ef4444" />
+          
         </View>
       );
     }
@@ -224,45 +284,47 @@ const TireStrategy: React.FC<TireStrategyProps> = ({ year, event, session }) => 
 
     return (
       <ScrollView style={styles.strategyContainer} showsVerticalScrollIndicator={false}>
-        {renderLegend()}
-        <View style={styles.driverList}>
-          {sortedStrategyData.map((driverData) => {
-            const isRaceSession = session === 'R' || session === 'SPRINT' || session === 'Race';
-            const position = isRaceSession ? driverPositionMap.get(driverData.driver) : undefined;
-            const positionText = position !== undefined && isFinite(position) ? `P${position}` : '';
-            
-            return (
-              <View key={driverData.driver} style={styles.driverRow}>
-                <View style={styles.driverInfo}>
-                  <Text style={styles.driverCode}>{driverData.driver}</Text>
-                  {positionText && (
-                    <Text style={styles.positionText}>{positionText}</Text>
-                  )}
+        <View style={{ paddingHorizontal: 16 }}>
+          {renderLegend()}
+          <View style={styles.driverList}>
+            {sortedStrategyData.map((driverData) => {
+              const isRaceSession = session === 'R' || session === 'SPRINT' || session === 'Race';
+              const position = isRaceSession ? driverPositionMap.get(driverData.driver) : undefined;
+              const positionText = position !== undefined && isFinite(position) ? `P${position}` : '';
+              
+              return (
+                <View key={driverData.driver} style={styles.driverRow}>
+                  <View style={styles.driverInfo}>
+                    <Text style={styles.driverCode}>{driverData.driver}</Text>
+                    {positionText && (
+                      <Text style={styles.positionText}>{positionText}</Text>
+                    )}
+                  </View>
+                  <View style={styles.stintBar}>
+                    {driverData.stints.map((stint, index) => {
+                      const widthPercentage = ((stint.endLap - stint.startLap + 1) / maxLaps) * 100;
+                      const leftOffsetPercentage = ((stint.startLap - 1) / maxLaps) * 100;
+                      const backgroundColor = getTireColor(stint.compound);
+                      
+                      return (
+                        <View
+                          key={index}
+                          style={[
+                            styles.stint,
+                            {
+                              backgroundColor,
+                              left: `${leftOffsetPercentage}%`,
+                              width: `${widthPercentage}%`,
+                            }
+                          ]}
+                        />
+                      );
+                    })}
+                  </View>
                 </View>
-                <View style={styles.stintBar}>
-                  {driverData.stints.map((stint, index) => {
-                    const widthPercentage = ((stint.endLap - stint.startLap + 1) / maxLaps) * 100;
-                    const leftOffsetPercentage = ((stint.startLap - 1) / maxLaps) * 100;
-                    const backgroundColor = getTireColor(stint.compound);
-                    
-                    return (
-                      <View
-                        key={index}
-                        style={[
-                          styles.stint,
-                          {
-                            backgroundColor,
-                            left: `${leftOffsetPercentage}%`,
-                            width: `${widthPercentage}%`,
-                          }
-                        ]}
-                      />
-                    );
-                  })}
-                </View>
-              </View>
-            );
-          })}
+              );
+            })}
+          </View>
         </View>
       </ScrollView>
     );
@@ -272,8 +334,8 @@ const TireStrategy: React.FC<TireStrategyProps> = ({ year, event, session }) => 
     if (analysisLoading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#ef4444" />
-          <Text style={styles.loadingText}>Loading stint analysis...</Text>
+          <LoadingSpinnerF1 size={48} color="#ef4444" />
+          
         </View>
       );
     }
@@ -314,7 +376,6 @@ const TireStrategy: React.FC<TireStrategyProps> = ({ year, event, session }) => 
       const fastLapDetails = allValidLapDetails.length > 2 ? allValidLapDetails.slice(1, -1) : [];
       const fastLapTimes = fastLapDetails.map(detail => detail.lapTime);
 
-      const avgLapTime = fastLapTimes.length > 0 ? fastLapTimes.reduce((a, b) => a + b, 0) / fastLapTimes.length : null;
       const fastestLap = allValidLapTimes.length > 0 ? Math.min(...allValidLapTimes) : null;
       const consistency = calculateStdDev(fastLapTimes);
       const degradation = calculateDegradation(allValidLapDetails);
@@ -322,89 +383,201 @@ const TireStrategy: React.FC<TireStrategyProps> = ({ year, event, session }) => 
       return {
         ...stint,
         stintLength: stint.endLap - stint.startLap + 1,
-        avgLapTime,
         fastestLap,
         consistency,
         degradation,
         tireColor: getTireColor(stint.compound),
       };
-    }).sort((a, b) => {
-      if (a.driverCode < b.driverCode) return -1;
-      if (a.driverCode > b.driverCode) return 1;
-      return a.stintNumber - b.stintNumber;
     });
 
-    const renderStintItem = ({ item }: { item: typeof processedStints[0] }) => (
-      <View style={styles.stintItem}>
-        <View style={styles.stintHeader}>
-          <View style={styles.stintDriverInfo}>
-            <Text style={styles.stintDriverCode}>{item.driverCode}</Text>
-            <Text style={styles.stintNumber}>Stint {item.stintNumber}</Text>
-          </View>
-          <View style={styles.compoundInfo}>
-            <View style={[styles.compoundDot, { backgroundColor: item.tireColor }]} />
-            <Text style={styles.compoundText}>{item.compound}</Text>
-          </View>
-        </View>
-        
-        <View style={styles.stintStats}>
-          <View style={styles.statItem}>
-            <Text style={styles.statLabel}>Length</Text>
-            <Text style={styles.statValue}>{item.stintLength} laps ({item.startLap}-{item.endLap})</Text>
-          </View>
-          
-          <View style={styles.statRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Fastest</Text>
-              <Text style={styles.statValue}>{formatLapTime(item.fastestLap)}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Average</Text>
-              <Text style={styles.statValue}>{formatLapTime(item.avgLapTime)}</Text>
-            </View>
-          </View>
-
-          {(session === 'R' || session === 'SPRINT' || session === 'Race') && (
-            <View style={styles.statRow}>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Consistency (σ)</Text>
-                <Text style={styles.statValue}>{item.consistency?.toFixed(3) ?? 'N/A'}</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Degradation</Text>
-                <Text style={[
-                  styles.statValue,
-                  item.degradation !== null && item.degradation > 0 
-                    ? styles.degradationBad 
-                    : styles.degradationGood
-                ]}>
-                  {item.degradation !== null ? `${item.degradation.toFixed(2)}s/lap` : 'N/A'}
-                </Text>
-              </View>
-            </View>
-          )}
-        </View>
-      </View>
-    );
+    // Apply sorting if a column is selected
+    const sortedStints = sortColumn 
+      ? sortData(processedStints, sortColumn, sortDirection)
+      : processedStints.sort((a, b) => {
+          if (a.driverCode < b.driverCode) return -1;
+          if (a.driverCode > b.driverCode) return 1;
+          return a.stintNumber - b.stintNumber;
+        });
 
     return (
       <ScrollView style={styles.analysisContainer} showsVerticalScrollIndicator={false}>
-        <FlatList
-          data={processedStints}
-          renderItem={renderStintItem}
-          keyExtractor={(item) => `${item.driverCode}-${item.stintNumber}`}
-          scrollEnabled={false}
-          showsVerticalScrollIndicator={false}
-        />
+        
+        
+        {/* Table Container */}
+        <View style={styles.tableContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={true} style={styles.tableScrollContainer}>
+            <View style={styles.tableContent}>
+              {/* Column Headers */}
+              <View style={[styles.tableRow, styles.headerRow]}>
+                <View style={[styles.tableCell, styles.driverColumn]}>
+                  <TouchableOpacity 
+                    style={styles.columnHeaderContainer}
+                    onPress={() => handleSort('driver')}
+                  >
+                    <Text style={styles.columnHeaderText}>Driver</Text>
+                    <View style={styles.sortArrows}>
+                      <AntDesign 
+                        name="arrowup" 
+                        size={14} 
+                        color={sortColumn === 'driver' && sortDirection === 'asc' ? colors.primary : colors.textSecondary} 
+                      />
+                      <AntDesign 
+                        name="arrowdown" 
+                        size={14} 
+                        color={sortColumn === 'driver' && sortDirection === 'desc' ? colors.primary : colors.textSecondary} 
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+                <View style={[styles.tableCell, styles.stintColumn]}>
+                  <Text style={styles.columnHeaderText}>Stint</Text>
+                </View>
+                <View style={[styles.tableCell, styles.compoundColumn]}>
+                  <Text style={styles.columnHeaderText}>Compound</Text>
+                </View>
+                <View style={[styles.tableCell, styles.lengthColumn]}>
+                  <TouchableOpacity 
+                    style={styles.columnHeaderContainer}
+                    onPress={() => handleSort('length')}
+                  >
+                    <Text style={styles.columnHeaderText}>Length</Text>
+                    <View style={styles.sortArrows}>
+                      <AntDesign 
+                        name="arrowup" 
+                        size={14} 
+                        color={sortColumn === 'length' && sortDirection === 'asc' ? colors.primary : colors.textSecondary} 
+                      />
+                      <AntDesign 
+                        name="arrowdown" 
+                        size={14} 
+                        color={sortColumn === 'length' && sortDirection === 'desc' ? colors.primary : colors.textSecondary} 
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+                <View style={[styles.tableCell, styles.fastestColumn]}>
+                  <TouchableOpacity 
+                    style={styles.columnHeaderContainer}
+                    onPress={() => handleSort('fastest')}
+                  >
+                    <Text style={styles.columnHeaderText}>Fastest</Text>
+                    <View style={styles.sortArrows}>
+                      <AntDesign 
+                        name="arrowup" 
+                        size={14} 
+                        color={sortColumn === 'fastest' && sortDirection === 'asc' ? colors.primary : colors.textSecondary} 
+                      />
+                      <AntDesign 
+                        name="arrowdown" 
+                        size={14} 
+                        color={sortColumn === 'fastest' && sortDirection === 'desc' ? colors.primary : colors.textSecondary} 
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+                <View style={[styles.tableCell, styles.consistencyColumn]}>
+                  <TouchableOpacity 
+                    style={styles.columnHeaderContainer}
+                    onPress={() => handleSort('consistency')}
+                  >
+                    <Text style={styles.columnHeaderText}>Consistency</Text>
+                    <View style={styles.sortArrows}>
+                      <AntDesign 
+                        name="arrowup" 
+                        size={14} 
+                        color={sortColumn === 'consistency' && sortDirection === 'asc' ? colors.primary : colors.textSecondary} 
+                      />
+                      <AntDesign 
+                        name="arrowdown" 
+                        size={14} 
+                        color={sortColumn === 'consistency' && sortDirection === 'desc' ? colors.primary : colors.textSecondary} 
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+                <View style={[styles.tableCell, styles.degradationColumn]}>
+                  <TouchableOpacity 
+                    style={styles.columnHeaderContainer}
+                    onPress={() => handleSort('degradation')}
+                  >
+                    <Text style={styles.columnHeaderText}>Degradation</Text>
+                    <View style={styles.sortArrows}>
+                      <AntDesign 
+                        name="arrowup" 
+                        size={14} 
+                        color={sortColumn === 'degradation' && sortDirection === 'asc' ? colors.primary : colors.textSecondary} 
+                      />
+                      <AntDesign 
+                        name="arrowdown" 
+                        size={14} 
+                        color={sortColumn === 'degradation' && sortDirection === 'desc' ? colors.primary : colors.textSecondary} 
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Table Data Rows */}
+              {sortedStints.map((item, index) => (
+                <View key={`${item.driverCode}-${item.stintNumber}`} style={[styles.tableRow, styles.dataRow, index % 2 === 0 ? styles.evenRow : styles.oddRow]}>
+                  <View style={[styles.tableCell, styles.driverColumn]}>
+                    <Text style={[styles.driverText, { fontFamily: typography.fontFamily.regular }]}>{item.driverCode}</Text>
+                  </View>
+                  <View style={[styles.tableCell, styles.stintColumn]}>
+                    <Text style={[styles.dataText, { fontFamily: typography.fontFamily.regular }]}>{item.stintNumber}</Text>
+                  </View>
+                  <View style={[styles.tableCell, styles.compoundColumn]}>
+                    <View style={styles.compoundContainer}>
+                      <View style={[styles.compoundDot, { backgroundColor: item.tireColor }]} />
+                      <Text style={[styles.compoundText, { fontFamily: typography.fontFamily.regular }]}>{item.compound}</Text>
+                    </View>
+                  </View>
+                  <View style={[styles.tableCell, styles.lengthColumn]}>
+                    <Text style={[styles.dataText, { fontFamily: typography.fontFamily.regular }]}>{item.stintLength} Laps ({item.startLap}-{item.endLap})</Text>
+                  </View>
+                  <View style={[styles.tableCell, styles.fastestColumn]}>
+                    <Text style={[styles.dataText, { fontFamily: typography.fontFamily.regular }]}>{formatLapTime(item.fastestLap)}</Text>
+                  </View>
+                  <View style={[styles.tableCell, styles.consistencyColumn]}>
+                    <Text style={[styles.dataText, { fontFamily: typography.fontFamily.regular }]}>{item.consistency?.toFixed(3) ?? 'N/A'}</Text>
+                  </View>
+                  <View style={[styles.tableCell, styles.degradationColumn]}>
+                    <View style={styles.degradationContainer}>
+                      {item.degradation !== null ? (
+                        <>
+                          <Feather 
+                            name={item.degradation > 0 ? "trending-up" : "trending-down"} 
+                            size={20} 
+                            color={item.degradation > 0 ? '#ff6b6b' : '#51cf66'} 
+                            style={{ marginRight: 4 }}
+                          />
+                          <Text style={[
+                            styles.dataText,
+                            item.degradation > 0 ? styles.degradationBad : styles.degradationGood,
+                            { fontFamily: typography.fontFamily.regular }
+                          ]}>
+                            {Math.abs(item.degradation).toFixed(2)}s/lap
+                          </Text>
+                        </>
+                      ) : (
+                        <Text style={styles.dataText}>N/A</Text>
+                      )}
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+        </View>
         
         {(session === 'R' || session === 'SPRINT' || session === 'Race') && (
-          <View style={styles.explanationContainer}>
+          <View style={[styles.explanationContainer, { marginHorizontal: 16 }]}>
             <Text style={styles.explanationTitle}>Explanations:</Text>
             <Text style={styles.explanationText}>
               • <Text style={styles.explanationBold}>Consistency (σ):</Text> Standard deviation of lap times (excluding first/last lap). Lower is more consistent.
             </Text>
             <Text style={styles.explanationText}>
-              • <Text style={styles.explanationBold}>Degradation:</Text> Change in lap time per lap. Positive means getting slower over the stint.
+              • <Text style={styles.explanationBold}>Degradation:</Text> Change in lap time per lap. ↗ = getting slower, ↘ = getting faster.
             </Text>
           </View>
         )}
@@ -414,28 +587,72 @@ const TireStrategy: React.FC<TireStrategyProps> = ({ year, event, session }) => 
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Strategy Analysis</Text>
-      
-      {/* Tab Navigation */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === 'overview' && styles.activeTab]}
-          onPress={() => setSelectedTab('overview')}
-        >
-          <Text style={[styles.tabText, selectedTab === 'overview' && styles.activeTabText]}>
-            Overview
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === 'analysis' && styles.activeTab]}
-          onPress={() => setSelectedTab('analysis')}
-        >
-          <Text style={[styles.tabText, selectedTab === 'analysis' && styles.activeTabText]}>
-            Stint Detail
-          </Text>
-        </TouchableOpacity>
+      <View style={{ paddingHorizontal: 16 }}>
+        <Text style={[commonStyles.title, { marginBottom: 16, textAlign: 'center', fontSize: 24}]}>
+          Strategy Analysis
+        </Text>
+       
+        
+        {/* Tab Navigation */}
+        <View style={{ 
+          flexDirection: 'row', 
+          backgroundColor: "#14141c",
+          borderColor: "#212a39",
+          borderWidth: 1,
+          borderRadius: 8, 
+          padding: 1.5, 
+          marginHorizontal: -16,
+          marginBottom: 16 
+        }}>
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              paddingHorizontal: 0,
+              paddingVertical: 8,
+              borderRadius: 6,
+              backgroundColor: selectedTab === 'overview' ? colors.primary : 'transparent',
+              alignItems: 'center',
+            }}
+            onPress={() => setSelectedTab('overview')}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <MaterialIcons name="format-list-bulleted" size={18} color="white" />
+              <Text style={{ 
+                color: selectedTab === 'overview' ? '#fff' : colors.textSecondary, 
+                //fontWeight: selectedTab === 'overview' ? 'bold' : 'normal',
+                fontSize: 12,
+                fontFamily: selectedTab === 'overview' ? typography.fontFamily.bold : typography.fontFamily.regular
+              }}>
+                Overview
+              </Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              paddingHorizontal: 0,
+              paddingVertical: 8,
+              borderRadius: 6,
+              backgroundColor: selectedTab === 'analysis' ? colors.primary : 'transparent',
+              alignItems: 'center',
+            }}
+            onPress={() => setSelectedTab('analysis')}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <ChartLineIcon size={18} color="white" />
+              <Text style={{ 
+                color: selectedTab === 'analysis' ? '#fff' : colors.textSecondary, 
+                //fontWeight: selectedTab === 'analysis' ? 'bold' : 'normal',
+                fontSize: 12, 
+                fontFamily: selectedTab === 'analysis' ? typography.fontFamily.bold : typography.fontFamily.regular
+              }}>
+                Stint Detail
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
-
+      
       {/* Tab Content */}
       <View style={styles.tabContent}>
         {selectedTab === 'overview' ? renderStrategyOverview() : renderStintAnalysis()}
@@ -446,11 +663,11 @@ const TireStrategy: React.FC<TireStrategyProps> = ({ year, event, session }) => 
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#18181b',
+    backgroundColor: 'transparent',
     borderRadius: 16,
-    padding: 16,
+    padding: 0,
     margin: 0,
-    marginHorizontal: 8,
+    marginHorizontal: 0,
     marginVertical: 8,
   },
   title: {
@@ -459,37 +676,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 16,
   },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#374151',
-    borderRadius: 8,
-    padding: 4,
-    marginBottom: 16,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  activeTab: {
-    backgroundColor: '#4b5563',
-  },
-  tabText: {
-    color: '#9ca3af',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  activeTabText: {
-    color: '#fff',
-  },
   tabContent: {
     flex: 1,
   },
   legendContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
     justifyContent: 'center',
     marginBottom: 16,
     paddingHorizontal: 8,
@@ -549,7 +741,7 @@ const styles = StyleSheet.create({
   stint: {
     position: 'absolute',
     height: '100%',
-    borderRadius: 2,
+    borderRadius: 0,
   },
   loadingContainer: {
     alignItems: 'center',
@@ -591,7 +783,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   analysisContainer: {
-    padding: 10,
+    padding: 0,
   },
   analysisText: {
     color: '#9ca3af',
@@ -691,6 +883,115 @@ const styles = StyleSheet.create({
   explanationBold: {
     fontWeight: 'bold',
     color: '#fff',
+  },
+  // Table Styles
+  tableContainer: {
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#374151',
+  },
+  tableScrollContainer: {
+    flex: 1,
+  },
+  tableContent: {
+    minWidth: 800, // Increase minimum width for wider columns
+  },
+  tableHeaderText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#374151',
+    minHeight: 48,
+  },
+  dataRow: {
+    backgroundColor: 'transparent',
+  },
+  headerRow: {
+    backgroundColor: '#374151',
+    borderBottomWidth: 2,
+    borderBottomColor: '#4b5563',
+  },
+  evenRow: {
+    backgroundColor: '#1f2937',
+  },
+  oddRow: {
+    backgroundColor: '#111827',
+  },
+  tableCell: {
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  driverColumn: {
+    width: 80,
+    marginRight: 16, // Add gap after driver column
+  },
+  stintColumn: {
+    width: 60,
+    alignItems: 'center',
+  },
+  compoundColumn: {
+    width: 140,
+    marginRight: 12, // Add gap after compound column
+  },
+  lengthColumn: {
+    width: 160,
+  },
+  fastestColumn: {
+    width: 100,
+  },
+  consistencyColumn: {
+    width: 110,
+    marginRight: 24, // Increase gap before degradation column
+  },
+  degradationColumn: {
+    width: 130,
+  },
+  columnHeaderText: {
+    color: '#e5e7eb',
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  columnHeaderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  sortArrows: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  driverText: {
+    color: '#3b82f6',
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  dataText: {
+    color: '#e5e7eb',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  compoundContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  degradationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
 

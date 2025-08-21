@@ -4,10 +4,10 @@
     "slug": "f1-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/android/play_store_512.png",
+    "icon": "./assets/images/android/res/mipmap-xxxhdpi/ic_launcher.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/images/starting_screen.jpg",
+      "image": "./assets/images/android/res/mipmap-xxxhdpi/ic_launcher.png",
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
@@ -19,6 +19,7 @@
       }
     },
     "android": {
+      "icon": "./assets/images/android/res/mipmap-xxxhdpi/ic_launcher.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android/res/mipmap-xxxhdpi/ic_launcher_foreground.png",
         "backgroundImage": "./assets/images/android/res/mipmap-xxxhdpi/ic_launcher_background.png"
@@ -26,12 +27,13 @@
       "package": "com.anonymous.F1Analytics"
     },
     "web": {
-      "favicon": "./assets/images/android/play_store_512.png",
+      "favicon": "./assets/images/android/res/mipmap-xxxhdpi/ic_launcher.png",
       "bundler": "metro"
     },
     "plugins": [
       "expo-font",
-      "expo-router"
+      "expo-router",
+      "expo-dev-client"
     ],
     "scheme": "natively",
     "experiments": {

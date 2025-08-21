@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, Text, StyleSheet, View, TouchableOpacity, Modal, FlatList, Dimensions, ActivityIndicator, TouchableWithoutFeedback } from 'react-native';
-import { VictoryChart, VictoryLine, VictoryAxis, VictoryLegend, VictoryTooltip, VictoryVoronoiContainer, VictoryContainer, VictoryScatter } from 'victory-native';
+import { ScrollView, Text, StyleSheet, View, TouchableOpacity, Modal, FlatList, Dimensions } from 'react-native';
+import { VictoryChart, VictoryLine, VictoryAxis, VictoryContainer } from 'victory-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { fetchLapPositions } from '../lib/api';
 import { LapPositionDataPoint } from '../lib/types';
+import { commonStyles, colors, typography } from '../styles/commonStyles';
+import LoadingSpinnerF1 from './LoadingSpinnerF1';
 
 export default function PositionsTabContentMobile({ 
   year = 2024, 
@@ -25,20 +28,20 @@ const [isModalVisible, setIsModalVisible] = useState(false);
 const [realData, setRealData] = useState<LapPositionDataPoint[] | null>(null);
 const [loading, setLoading] = useState(false);
 const [error, setError] = useState<string | null>(null);
-const [activeTooltip, setActiveTooltip] = useState<{
-  lap: number;
-  positions: { driver: string; position: number; color: string }[];
-} | null>(null);
-const [clickedLap, setClickedLap] = useState<number | null>(null);
+const [shouldLoadChart, setShouldLoadChart] = useState(false);
+const [isChartRendering, setIsChartRendering] = useState(false);
+const [renderedLines, setRenderedLines] = useState<string[]>([]);
 
-// All 20 F1 drivers with team assignments (based on your color mapping)
+// Reduced driver list for better performance
 const driverCodes = [
   'RUS', 'ANT', 'VER', 'TSU', 'HAM', 'LEC', 'NOR', 'PIA',
   'ALO', 'STR', 'GAS', 'COL', 'ALB', 'SAI', 'BEA', 'OCO',
   'LAW', 'HAD', 'HUL', 'BOR'
 ];
+
+const MAX_DRIVERS = 20;
   
-  // Team assignments - first driver is main, second is secondary
+  // Team assignments - updated for better performance
 const teamDrivers = {
   'Mercedes': ['RUS', 'ANT'],
   'Red Bull': ['VER', 'TSU'],
@@ -57,7 +60,7 @@ const teamDrivers = {
     return Object.values(teamDrivers).some(team => team[0] === code);
   };
   
-  // Mock driver colors based on team colors
+  // Updated driver colors
   const driverColor = (code: string): string => {
     const colors: { [key: string]: string } = {
       'RUS': '#00D2BE', 'ANT': '#00D2BE', // Mercedes
@@ -76,7 +79,7 @@ const teamDrivers = {
   const chartLines = [
     // Mercedes
     {
-      code: 'HAM',
+      code: 'RUS',
       data: [
         { x: 1, y: 3 }, { x: 2, y: 2 }, { x: 3, y: 1 }, { x: 4, y: 1 }, { x: 5, y: 2 },
         { x: 6, y: 1 }, { x: 7, y: 1 }, { x: 8, y: 3 }, { x: 9, y: 2 }, { x: 10, y: 1 },
@@ -85,7 +88,7 @@ const teamDrivers = {
       ],
     },
     {
-      code: 'RUS',
+      code: 'ANT',
       data: [
         { x: 1, y: 4 }, { x: 2, y: 3 }, { x: 3, y: 4 }, { x: 4, y: 3 }, { x: 5, y: 3 },
         { x: 6, y: 4 }, { x: 7, y: 5 }, { x: 8, y: 4 }, { x: 9, y: 4 }, { x: 10, y: 5 },
@@ -104,7 +107,7 @@ const teamDrivers = {
       ],
     },
     {
-      code: 'PER',
+      code: 'TSU',
       data: [
         { x: 1, y: 2 }, { x: 2, y: 4 }, { x: 3, y: 3 }, { x: 4, y: 4 }, { x: 5, y: 4 },
         { x: 6, y: 3 }, { x: 7, y: 3 }, { x: 8, y: 2 }, { x: 9, y: 3 }, { x: 10, y: 3 },
@@ -114,7 +117,7 @@ const teamDrivers = {
     },
     // Ferrari
     {
-      code: 'LEC',
+      code: 'HAM',
       data: [
         { x: 1, y: 5 }, { x: 2, y: 5 }, { x: 3, y: 5 }, { x: 4, y: 5 }, { x: 5, y: 5 },
         { x: 6, y: 5 }, { x: 7, y: 4 }, { x: 8, y: 5 }, { x: 9, y: 5 }, { x: 10, y: 4 },
@@ -123,7 +126,7 @@ const teamDrivers = {
       ],
     },
     {
-      code: 'SAI',
+      code: 'LEC',
       data: [
         { x: 1, y: 6 }, { x: 2, y: 6 }, { x: 3, y: 6 }, { x: 4, y: 6 }, { x: 5, y: 6 },
         { x: 6, y: 6 }, { x: 7, y: 6 }, { x: 8, y: 6 }, { x: 9, y: 6 }, { x: 10, y: 6 },
@@ -180,7 +183,7 @@ const teamDrivers = {
       ],
     },
     {
-      code: 'OCO',
+      code: 'COL',
       data: [
         { x: 1, y: 12 }, { x: 2, y: 12 }, { x: 3, y: 12 }, { x: 4, y: 12 }, { x: 5, y: 11 },
         { x: 6, y: 12 }, { x: 7, y: 12 }, { x: 8, y: 11 }, { x: 9, y: 12 }, { x: 10, y: 12 },
@@ -199,7 +202,7 @@ const teamDrivers = {
       ],
     },
     {
-      code: 'SAR',
+      code: 'SAI',
       data: [
         { x: 1, y: 14 }, { x: 2, y: 14 }, { x: 3, y: 14 }, { x: 4, y: 14 }, { x: 5, y: 14 },
         { x: 6, y: 14 }, { x: 7, y: 14 }, { x: 8, y: 14 }, { x: 9, y: 14 }, { x: 10, y: 14 },
@@ -209,7 +212,7 @@ const teamDrivers = {
     },
     // Haas
     {
-      code: 'MAG',
+      code: 'BEA',
       data: [
         { x: 1, y: 15 }, { x: 2, y: 15 }, { x: 3, y: 15 }, { x: 4, y: 15 }, { x: 5, y: 15 },
         { x: 6, y: 15 }, { x: 7, y: 15 }, { x: 8, y: 15 }, { x: 9, y: 15 }, { x: 10, y: 15 },
@@ -218,7 +221,7 @@ const teamDrivers = {
       ],
     },
     {
-      code: 'HUL',
+      code: 'OCO',
       data: [
         { x: 1, y: 16 }, { x: 2, y: 16 }, { x: 3, y: 16 }, { x: 4, y: 16 }, { x: 5, y: 16 },
         { x: 6, y: 16 }, { x: 7, y: 16 }, { x: 8, y: 16 }, { x: 9, y: 16 }, { x: 10, y: 16 },
@@ -228,7 +231,7 @@ const teamDrivers = {
     },
     // RB
     {
-      code: 'TSU',
+      code: 'LAW',
       data: [
         { x: 1, y: 17 }, { x: 2, y: 17 }, { x: 3, y: 17 }, { x: 4, y: 17 }, { x: 5, y: 17 },
         { x: 6, y: 17 }, { x: 7, y: 17 }, { x: 8, y: 18 }, { x: 9, y: 17 }, { x: 10, y: 17 },
@@ -237,7 +240,7 @@ const teamDrivers = {
       ],
     },
     {
-      code: 'RIC',
+      code: 'HAD',
       data: [
         { x: 1, y: 18 }, { x: 2, y: 18 }, { x: 3, y: 18 }, { x: 4, y: 18 }, { x: 5, y: 18 },
         { x: 6, y: 18 }, { x: 7, y: 18 }, { x: 8, y: 17 }, { x: 9, y: 18 }, { x: 10, y: 18 },
@@ -247,7 +250,7 @@ const teamDrivers = {
     },
     // Kick Sauber
     {
-      code: 'BOT',
+      code: 'HUL',
       data: [
         { x: 1, y: 19 }, { x: 2, y: 19 }, { x: 3, y: 19 }, { x: 4, y: 19 }, { x: 5, y: 19 },
         { x: 6, y: 19 }, { x: 7, y: 20 }, { x: 8, y: 19 }, { x: 9, y: 19 }, { x: 10, y: 20 },
@@ -256,7 +259,7 @@ const teamDrivers = {
       ],
     },
     {
-      code: 'ZHO',
+      code: 'BOR',
       data: [
         { x: 1, y: 20 }, { x: 2, y: 20 }, { x: 3, y: 20 }, { x: 4, y: 20 }, { x: 5, y: 20 },
         { x: 6, y: 20 }, { x: 7, y: 19 }, { x: 8, y: 20 }, { x: 9, y: 20 }, { x: 10, y: 19 },
@@ -267,62 +270,127 @@ const teamDrivers = {
   ];
 
   const handleDriverSelectionChange = (driverCode: string) => {
-    setSelectedDrivers(prev => 
-      prev.includes(driverCode)
-        ? prev.filter(code => code !== driverCode)
-        : [...prev, driverCode]
-    );
+    setSelectedDrivers(prev => {
+      const isSelected = prev.includes(driverCode);
+      let newSelection: string[];
+
+      if (isSelected) {
+        newSelection = prev.filter(code => code !== driverCode);
+      } else {
+        if (prev.length < MAX_DRIVERS) {
+          newSelection = [...prev, driverCode];
+        } else {
+          // If at max, replace the last one
+          newSelection = [...prev.slice(0, -1), driverCode];
+        }
+      }
+
+      // Reset chart loading state when selection changes
+      setShouldLoadChart(false);
+      setIsChartRendering(false);
+      setRenderedLines([]);
+      return newSelection;
+    });
   };
 
   const handleSelectAll = () => {
-    setSelectedDrivers([...driverCodes]);
+    setSelectedDrivers(driverCodes.slice(0, MAX_DRIVERS));
+    setShouldLoadChart(false);
+    setIsChartRendering(false);
+    setRenderedLines([]);
   };
 
   const handleSelectNone = () => {
     setSelectedDrivers([]);
+    setShouldLoadChart(false);
+    setIsChartRendering(false);
+    setRenderedLines([]);
   };
 
-  // Fetch real data when not using mock data
-  useEffect(() => {
-    if (!useMockData) {
-      const loadPositionData = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-          const data = await fetchLapPositions(year, event, session);
-          //console.log("Live DATA:",data);
-          setRealData(data);
-        } catch (err) {
-          setError(err instanceof Error ? err.message : 'Failed to load position data');
-        } finally {
-          setLoading(false);
-        }
-      };
-      loadPositionData();
+  // Load data when requested
+  const loadPositionData = async () => {
+    if (useMockData) {
+      setIsChartRendering(true);
+      setRenderedLines([]);
+      
+      // Start progressive line rendering
+      setTimeout(() => {
+        renderLinesProgressively(selectedDrivers);
+      }, 100);
+      
+      setShouldLoadChart(true);
+      return;
     }
-  }, [year, event, session, useMockData]);
 
-  // Convert real data to chart format
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchLapPositions(year, event, session);
+      setRealData(data);
+      setIsChartRendering(true);
+      setRenderedLines([]);
+      
+      // Start progressive line rendering
+      setTimeout(() => {
+        renderLinesProgressively(selectedDrivers);
+      }, 100);
+      
+      setShouldLoadChart(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load position data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Progressive line rendering function
+  const renderLinesProgressively = (drivers: string[]) => {
+    let currentIndex = 0;
+    
+    const renderNextLine = () => {
+      if (currentIndex < drivers.length) {
+        setRenderedLines(prev => [...prev, drivers[currentIndex]]);
+        currentIndex++;
+        setTimeout(renderNextLine, 150); // 150ms delay between each line
+      } else {
+        // All lines rendered, hide loading overlay
+        setTimeout(() => {
+          setIsChartRendering(false);
+        }, 300);
+      }
+    };
+    
+    renderNextLine();
+  };
+
+  // Convert real data to chart format - optimized for smooth rendering
   const convertRealDataToChartLines = (data: LapPositionDataPoint[]) => {
     const driverCodes = Object.keys(data[0] || {}).filter(key => key !== 'LapNumber');
     return driverCodes.map(code => ({
       code,
-      data: data.map(lap => ({
-        x: lap.LapNumber,
-        y: lap[code] || 20 // Default to last position if null
-      }))
+      data: data
+        .map(lap => ({
+          x: lap.LapNumber,
+          y: lap[code] && lap[code] > 0 && lap[code] <= 20 ? lap[code] : null // Use null for invalid data
+        }))
+        .filter(point => point.x > 0) // Keep all points but with null values for invalid positions
     }));
   };
 
-  const filteredChartLines = useMockData 
-    ? chartLines.filter(line => selectedDrivers.includes(line.code))
-    : realData 
-      ? convertRealDataToChartLines(realData).filter(line => selectedDrivers.includes(line.code))
-      : [];
+  // Only prepare data when chart should be loaded
+  const filteredChartLines = shouldLoadChart ? (
+    useMockData 
+      ? chartLines.filter(line => selectedDrivers.includes(line.code))
+      : realData 
+        ? convertRealDataToChartLines(realData).filter(line => selectedDrivers.includes(line.code))
+        : []
+  ) : [];
   
-  const maxLap = Math.max(...(filteredChartLines.length > 0 ? filteredChartLines.flatMap(line => line.data.map(d => d.x)) : [20]));
+  const maxLap = filteredChartLines.length > 0 
+    ? Math.max(...filteredChartLines.flatMap(line => line.data.map(d => d.x))) 
+    : 20;
   const screenWidth = Dimensions.get('window').width;
-  const chartWidth = Math.max(screenWidth - 40, maxLap * 25); // Minimum width based on laps
+  const chartWidth = Math.max(screenWidth - 40, maxLap * 15); // Reduced multiplier for better performance
   const flipY = (y: number) => 21 - y;
 
   const getButtonText = () => {
@@ -331,19 +399,58 @@ const teamDrivers = {
     return `${selectedDrivers.length} Selected`;
   };
 
-  const CustomTooltipLabel = ({ datum }: any) => {
-  return `Lap ${datum.x}\n${datum.seriesName} : P${21 - datum.y}`;
-};
+  const renderLoadButton = () => (
+    <View style={{ alignItems: 'center', marginVertical: 20 }}>
+      <TouchableOpacity
+        style={{
+          backgroundColor: '#2a2d3a',
+          paddingHorizontal: 32,
+          paddingVertical: 16,
+          borderRadius: 12,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          width: '100%',
+          maxWidth: 280,
+          borderWidth: 1,
+          borderColor: '#3a3f4e',
+        }}
+        onPress={loadPositionData}
+        disabled={selectedDrivers.length === 0 || loading}
+      >
+        <MaterialIcons name="show-chart" size={20} color="#fff" />
+        <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16, fontFamily: typography.fontFamily.semiBold }}>
+          {loading ? 'Loading...' : 'Load Position Chart'}
+        </Text>
+      </TouchableOpacity>
+      <Text style={{ 
+        color: colors.textSecondary, 
+        fontSize: 11, 
+        marginTop: 12, 
+        textAlign: 'center',
+        lineHeight: 18,
+        paddingHorizontal: 20,
+        fontFamily: typography.fontFamily.regular
+      }}>
+        Select drivers and click load to view position changes
+      </Text>
+    </View>
+  );
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>Lap-by-Lap Position Changes</Text>
+      <Text style={[commonStyles.title, { marginBottom: 16, textAlign: 'center', fontSize: 20}]}>
+                    Lap-by-Lap Position Changes
+                  </Text>
+                  <Text style={{ color: colors.textSecondary, fontSize: 12.2, textAlign: 'center', marginBottom: 16, fontFamily: typography.fontFamily.regular }}>
+                            Track driver positions throughout the race Use selector to filter
+                  </Text>
       
       {/* Loading State */}
       {loading && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#ef4444" />
-          <Text style={styles.loadingText}>Loading position data...</Text>
+          <LoadingSpinnerF1 size={48} color="#ef4444" />
         </View>
       )}
 
@@ -380,16 +487,42 @@ const teamDrivers = {
       {!loading && !error && (
         <>
           {/* Driver Selection Button */}
-          <TouchableOpacity 
-            style={styles.driverSelectorButton}
-            onPress={() => setIsModalVisible(true)}
-            disabled={driverCodes.length === 0}
-          >
-            <Text style={styles.driverSelectorButtonText}>
-              {getButtonText()}
-            </Text>
-            <Text style={styles.chevron}>▾</Text>
-          </TouchableOpacity>
+          <View style={{ marginBottom: 20 }}>
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: 16,
+                backgroundColor: "#14141c",
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: "#212a39",
+              }}
+              onPress={() => setIsModalVisible(true)}
+              disabled={driverCodes.length === 0}
+            >
+              <View style={{ 
+                backgroundColor: colors.primary + '20',
+                borderRadius: 12,
+                padding: 8,
+                marginRight: 16,
+              }}>
+                <MaterialIcons name="people" size={24} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600', fontFamily: typography.fontFamily.semiBold }}>
+                  Select Drivers ({selectedDrivers.length}/{MAX_DRIVERS} max)
+                </Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2, fontFamily: typography.fontFamily.regular }}>
+                  {getButtonText()}
+                </Text>
+              </View>
+              <MaterialIcons name="chevron-right" size={20} color={colors.grey} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Load Button */}
+          {!shouldLoadChart && selectedDrivers.length > 0 && renderLoadButton()}
 
       {/* Driver Selection Modal */}
       <Modal
@@ -398,247 +531,305 @@ const teamDrivers = {
         animationType="slide"
         onRequestClose={() => setIsModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Drivers</Text>
-              <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-                <Text style={styles.closeButton}>✕</Text>
+        <View style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        }}>
+          <View style={{
+            backgroundColor: '#141422',
+            borderRadius: 20,
+            padding: 24,
+            margin: 20,
+            maxHeight: '80%',
+            width: '90%',
+            borderWidth: 1,
+            borderColor: colors.border,
+          }}>
+            {/* Modal Header */}
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              marginBottom: 20,
+            }}>
+              <View style={{ flex: 1, paddingRight: 16 }}>
+                <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#fff', marginBottom: 4, fontFamily: typography.fontFamily.bold }}>
+                  Select Drivers
+                </Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 14, fontFamily: typography.fontFamily.regular }}>
+                  Choose which drivers to display on the chart
+                </Text>
+              </View>
+              <TouchableOpacity 
+                onPress={() => setIsModalVisible(false)}
+                style={{
+                  padding: 6,
+                  borderRadius: 10,
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginTop: -4,
+                  marginRight: -4,
+                }}
+              >
+                <MaterialIcons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
             
-            <View style={styles.modalActions}>
-              <TouchableOpacity onPress={handleSelectAll} style={styles.actionButton}>
-                <Text style={styles.actionButtonText}>All</Text>
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              borderBottomWidth: 1,
+              borderBottomColor: colors.border,
+              paddingBottom: 12,
+              marginBottom: 12,
+            }}>
+              <TouchableOpacity 
+                onPress={handleSelectAll} 
+                style={{
+                  backgroundColor: colors.primary + '20',
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: colors.primary,
+                }}
+              >
+                <Text style={{ 
+                  color: colors.primary, 
+                  fontSize: 14, 
+                  fontWeight: '600' 
+                }}>
+                  Select All
+                </Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleSelectNone} style={styles.actionButton}>
-                <Text style={styles.actionButtonText}>None</Text>
+              <TouchableOpacity 
+                onPress={handleSelectNone} 
+                style={{
+                  backgroundColor: 'transparent',
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
+              >
+                <Text style={{ 
+                  color: colors.textSecondary, 
+                  fontSize: 14, 
+                  fontWeight: '600' 
+                }}>
+                  Clear All
+                </Text>
               </TouchableOpacity>
             </View>
 
-            <FlatList
-              data={driverCodes}
-              style={styles.driverList}
-              keyExtractor={(item) => item}
-              renderItem={({ item: driverCode }) => (
-                <TouchableOpacity
-                  style={styles.driverItem}
-                  onPress={() => handleDriverSelectionChange(driverCode)}
-                >
-                  <View style={[
-                    styles.checkbox,
-                    selectedDrivers.includes(driverCode) && styles.checkboxSelected
-                  ]}>
-                    {selectedDrivers.includes(driverCode) && (
-                      <Text style={styles.checkmark}>✓</Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {driverCodes.map((driverCode) => {
+                const isSelected = selectedDrivers.includes(driverCode);
+                const driverColorValue = driverColor(driverCode);
+                
+                return (
+                  <TouchableOpacity
+                    key={driverCode}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      padding: 16,
+                      marginBottom: 8,
+                      backgroundColor: isSelected ? driverColorValue + '20' : '#202534ff',
+                      borderRadius: 12,
+                      borderWidth: isSelected ? 2 : 1,
+                      borderColor: isSelected ? driverColorValue : colors.border,
+                    }}
+                    onPress={() => handleDriverSelectionChange(driverCode)}
+                  >
+                    <View style={{ 
+                      marginRight: 12, 
+                      width: 40, 
+                      height: 40, 
+                      justifyContent: 'center', 
+                      alignItems: 'center', 
+                      backgroundColor: driverColorValue + '30', 
+                      borderRadius: 20 
+                    }}>
+                      <Text style={{ 
+                        color: driverColorValue, 
+                        fontWeight: 'bold', 
+                        fontSize: 14 
+                      }}>
+                        {driverCode}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ 
+                        color: '#fff', 
+                        fontWeight: '600', 
+                        fontSize: 16 
+                      }}>
+                        {driverCode}
+                      </Text>
+                      <Text style={{ 
+                        color: colors.textSecondary, 
+                        fontSize: 12 
+                      }}>
+                        Driver {driverCode}
+                      </Text>
+                    </View>
+                    <View style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: 10,
+                      backgroundColor: driverColorValue,
+                      marginLeft: 8,
+                    }} />
+                    {isSelected && (
+                      <MaterialIcons 
+                        name="check-circle" 
+                        size={24} 
+                        color={driverColorValue}
+                        style={{ marginLeft: 8 }}
+                      />
                     )}
-                  </View>
-                  <Text style={[styles.driverCode, { color: driverColor(driverCode) }]}>
-                    {driverCode}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            />
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            {/* Selection Info */}
+            <View style={{
+              marginTop: 16,
+              padding: 12,
+              backgroundColor: '#002f42',
+              borderRadius: 8,
+            }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 12, textAlign: 'center', fontFamily: typography.fontFamily.regular }}>
+                {selectedDrivers.length} of {driverCodes.length} drivers selected
+              </Text>
+            </View>
           </View>
         </View>
       </Modal>
 
-      {/* Horizontally Scrollable Chart Container */}
-      <View style={{ position: 'relative' }}>
-        <ScrollView 
-          horizontal={true}
-          showsHorizontalScrollIndicator={true}
-          style={styles.chartContainer}
-          contentContainerStyle={{ paddingRight: 20 }}
-        >
-          <TouchableWithoutFeedback onPress={() => {
-            setActiveTooltip(null);
-            setClickedLap(null);
-          }}>
-            <View style={{ width: chartWidth, height: 280 }}>
-
-<VictoryChart
-  width={chartWidth}
-  height={280}
-  padding={{ left: 30, right: 20, top: 20, bottom: 50 }}
-  domainPadding={{ x: 15, y: 5 }}
-  containerComponent={
-    <VictoryVoronoiContainer
-      voronoiDimension="x"
-      onActivated={(points, props) => {
-        if (points && points.length > 0) {
-          const datum = points[0];
-          const lap = Math.round(datum.x);
-          
-          // Get all driver positions for this lap
-          const positions = filteredChartLines.map(line => {
-            const dataPoint = line.data.find(point => point.x === lap);
-            return {
-              driver: line.code,
-              position: dataPoint ? dataPoint.y : 20,
-              color: driverColor(line.code)
-            };
-          }).sort((a, b) => a.position - b.position); // Sort by position
-          
-          setActiveTooltip({
-            lap: lap,
-            positions: positions
-          });
-          setClickedLap(lap);
-        }
-      }}
-      onDeactivated={() => {
-        // Keep tooltip visible when deactivated - only close manually
-      }}
-      labels={() => ''} // Return empty string so no default label shows
-    />
-  }
->
-
-          <VictoryAxis
-            style={{
-              axis: { stroke: '#374151' },
-              tickLabels: { fill: '#9ca3af', fontSize: 8 },
-              grid: { stroke: '#374151', strokeDasharray: '2,2' }
-            }}
-            tickCount={maxLap}
-            tickFormat={(t) => `${Math.round(t)}`}
-          />
-          <VictoryAxis
-            dependentAxis
-            domain={[20, 1]}
-            tickCount={20}
-            tickFormat={(t) => `P${21 - t}`}
-            style={{
-              axis: { stroke: '#374151' },
-              tickLabels: { fill: '#9ca3af', fontSize: 8 },
-              grid: { stroke: '#374151', strokeDasharray: '2,2' }
-            }}
-          />
-          {filteredChartLines.map(line => {
-  const flippedData = line.data.map(point => ({
-    ...point,
-    y: flipY(point.y),
-  }));
-  return (
-    <VictoryLine
-      key={line.code}
-      name={line.code}
-      data={flippedData}
-      style={{
-        data: { 
-          stroke: driverColor(line.code), 
-          strokeWidth: 2.5,
-          strokeLinecap: 'round',
-          strokeLinejoin: 'round',
-          strokeDasharray: isMainDriver(line.code) ? '0' : '5,5'
-        },
-      }}
-      animate={{
-        duration: 1000,
-        onLoad: { duration: 500 }
-      }}
-    />
-  );
-})}
-
-          {/* Dots for clicked lap */}
-          {clickedLap && filteredChartLines.map(line => {
-            const dataPoint = line.data.find(point => point.x === clickedLap);
-            if (!dataPoint) return null;
+      {/* Chart Content - Only render when loaded */}
+      {shouldLoadChart && filteredChartLines.length > 0 && (
+        <>
+          {/* Horizontally Scrollable Chart Container */}
+          <View style={{ position: 'relative' }}>
+            <ScrollView 
+              horizontal={true}
+              showsHorizontalScrollIndicator={true}
+              style={styles.chartContainer}
+              contentContainerStyle={{ paddingRight: 0 }}
+            >
+              <View style={{ width: chartWidth, height: 280 }}>
+                <VictoryChart
+                  width={chartWidth}
+                  height={280}
+                  padding={{ left: 30, right: -10, top: 20, bottom: 50 }}
+                  domainPadding={{ x: 15, y: 5 }}
+                  domain={{ x: [1, maxLap], y: [1, 20] }}
+                  containerComponent={
+                    <VictoryContainer 
+                      style={{ 
+                        touchAction: "auto",
+                        backgroundColor: "transparent"
+                      }}
+                    />
+                  }
+                  scale={{ x: "linear", y: "linear" }}
+                >
+                  <VictoryAxis
+                    style={{
+                      axis: { stroke: '#374151' },
+                      tickLabels: { fill: '#9ca3af', fontSize: 8 },
+                      grid: { stroke: '#374151', strokeDasharray: '2,2', strokeOpacity: 0.3 }
+                    }}
+                    tickCount={Math.min(10, maxLap)}
+                    tickFormat={(t) => `${Math.round(t)}`}
+                  />
+                  <VictoryAxis
+                    dependentAxis
+                    domain={[20, 1]}
+                    tickCount={20}
+                    tickFormat={(t) => `P${21 - t}`}
+                    style={{
+                      axis: { stroke: '#374151' },
+                      tickLabels: { fill: '#9ca3af', fontSize: 8 },
+                      grid: { stroke: '#374151', strokeDasharray: '2,2', strokeOpacity: 0.3 }
+                    }}
+                  />
+                  {filteredChartLines
+                    .filter(line => renderedLines.includes(line.code)) // Only render lines that are ready
+                    .map(line => {
+                    const flippedData = line.data
+                      .filter(point => point.y !== null) // Filter out null values
+                      .map(point => ({
+                        ...point,
+                        y: flipY(point.y as number),
+                      }));
+                    return (
+                      <VictoryLine
+                        key={line.code}
+                        name={line.code}
+                        data={flippedData}
+                        interpolation="monotoneX"
+                        samples={100}
+                        style={{
+                          data: { 
+                            stroke: driverColor(line.code), 
+                            strokeWidth: 2.5,
+                            strokeLinecap: 'round',
+                            strokeLinejoin: 'round',
+                            strokeDasharray: isMainDriver(line.code) ? '0,0' : '5,5'
+                          },
+                        }}
+                        animate={{
+                          duration: 800,
+                          onLoad: { duration: 400 }
+                        }}
+                      />
+                    );
+                  })}
+                </VictoryChart>
+              </View>
+            </ScrollView>
             
-            const flippedPoint = {
-              x: dataPoint.x,
-              y: flipY(dataPoint.y)
-            };
-            
-            return (
-              <VictoryScatter
-                key={`${line.code}-dot`}
-                data={[flippedPoint]}
-                size={6}
-                style={{
-                  data: { 
-                    fill: driverColor(line.code),
-                    stroke: '#fff',
-                    strokeWidth: 2
-                  },
-                }}
-              />
-            );
-          })}
-        </VictoryChart>
+            {/* Chart Rendering Overlay */}
+            {isChartRendering && (
+              <View style={styles.chartRenderingOverlay}>
+                <View style={styles.renderingContent}>
+                  <LoadingSpinnerF1 size={56} color="#ef4444" />
+                </View>
+              </View>
+            )}
+          </View>
 
-        {/* Custom Persistent Tooltip */}
-        {activeTooltip && (
-          <View
-            style={[
-              styles.customTooltip,
-              {
-                position: 'absolute',
-                left: Math.max(10, Math.min((activeTooltip.lap - 1) * (chartWidth / maxLap) + 50, chartWidth - 130)),
-                top: 4,
-                bottom: 0, // Extend to full height to show all drivers
-                zIndex: 10000,
-              }
-            ]}
-          >
-            <View style={styles.tooltipHeader}>
-              <Text style={styles.tooltipTitle}>
-                Lap {activeTooltip.lap}
-              </Text>
-              <TouchableOpacity 
-                style={styles.tooltipCloseButton}
-                onPress={() => {
-                  setActiveTooltip(null);
-                  setClickedLap(null);
-                }}
-              >
-                <Text style={styles.tooltipCloseText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.tooltipDriversList} showsVerticalScrollIndicator={false}>
-              {activeTooltip.positions.map((pos, index) => (
-                <View key={pos.driver} style={styles.tooltipDriverItem}>
-                  <Text style={[styles.tooltipDriverCode, { color: pos.color }]}>
-                    {pos.driver}
-                  </Text>
-                  <Text style={styles.tooltipPosition}>
-                    P{pos.position}
-                  </Text>
+          {/* Fixed Multi-Row Legend */}
+          <View style={styles.legendContainer}>
+            <View style={styles.legendGrid}>
+              {selectedDrivers.map(code => (
+                <View key={code} style={styles.legendItem}>
+                  <View style={styles.legendLineContainer}>
+                    {isMainDriver(code) ? (
+                      <View style={[styles.legendLine, { backgroundColor: driverColor(code) }]} />
+                    ) : (
+                      <View style={styles.legendDashedContainer}>
+                        <View style={[styles.legendDash, { backgroundColor: driverColor(code) }]} />
+                        <View style={[styles.legendDash, { backgroundColor: driverColor(code) }]} />
+                        <View style={[styles.legendDash, { backgroundColor: driverColor(code) }]} />
+                      </View>
+                    )}
+                  </View>
+                  <Text style={[styles.legendText, { color: driverColor(code) }]}>{code}</Text>
                 </View>
               ))}
-            </ScrollView>
-          </View>
-        )}
-        </View>
-        </TouchableWithoutFeedback>
-      </ScrollView>
-      </View>
-
-      {/* Fixed Multi-Row Legend */}
-      <View style={styles.legendContainer}>
-        <View style={styles.legendGrid}>
-          {selectedDrivers.map(code => (
-            <View key={code} style={styles.legendItem}>
-              <View style={styles.legendLineContainer}>
-                {isMainDriver(code) ? (
-                  // Solid line for main drivers
-                  <View style={[styles.legendLine, { backgroundColor: driverColor(code) }]} />
-                ) : (
-                  // Dashed line for secondary drivers
-                  <View style={styles.legendDashedContainer}>
-                    <View style={[styles.legendDash, { backgroundColor: driverColor(code) }]} />
-                    <View style={[styles.legendDash, { backgroundColor: driverColor(code) }]} />
-                    <View style={[styles.legendDash, { backgroundColor: driverColor(code) }]} />
-                  </View>
-                )}
-              </View>
-              <Text style={[styles.legendText, { color: driverColor(code) }]}>{code}</Text>
             </View>
-          ))}
-        </View>
-      </View>
+          </View>
+        </>
+      )}
         </>
       )}
     </View>
@@ -647,9 +838,9 @@ const teamDrivers = {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#18181b',
+    backgroundColor: 'transparent',
     borderRadius: 16,
-    padding: 16,
+    paddingRight: 0,
     margin: 8,
   },
   title: {
@@ -657,111 +848,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 18,
     marginBottom: 8,
-  },
-  driverSelectorButton: {
-    backgroundColor: '#374151',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#4b5563',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: 180,
-  },
-  driverSelectorButtonText: {
-    color: '#fff',
-    fontSize: 12,
-    flex: 1,
-  },
-  chevron: {
-    color: '#9ca3af',
-    fontSize: 16,
-    marginLeft: 8,
-    fontWeight: 'bold',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#111827',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#374151',
-    width: '80%',
-    maxHeight: '70%',
-    padding: 16,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modalTitle: {
-    color: '#e5e7eb',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  closeButton: {
-    color: '#9ca3af',
-    fontSize: 18,
-    padding: 4,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: '#374151',
-    paddingBottom: 12,
-    marginBottom: 12,
-  },
-  actionButton: {
-    padding: 8,
-  },
-  actionButtonText: {
-    color: '#ef4444',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  driverList: {
-    maxHeight: 250,
-  },
-  driverItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    borderRadius: 6,
-    marginBottom: 4,
-  },
-  checkbox: {
-    width: 16,
-    height: 16,
-    borderRadius: 3,
-    borderWidth: 1,
-    borderColor: '#4b5563',
-    marginRight: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxSelected: {
-    backgroundColor: '#dc2626',
-    borderColor: '#dc2626',
-  },
-  checkmark: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  driverCode: {
-    fontSize: 12,
-    fontWeight: '600',
   },
   chartContainer: {
     marginVertical: 8,
@@ -848,78 +934,43 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  // Custom Tooltip Styles
-  customTooltip: {
-    backgroundColor: 'rgba(18, 24, 37, 0.95)', // #121825 with 95% opacity for slight transparency
-    borderColor: '#333',
+  // Chart Rendering Overlay Styles
+  chartRenderingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#14141c',
+    borderRadius: 16,
+    borderColor: '#374151',
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    width: 120,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  tooltipTitle: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    flex: 1,
-    marginBottom: 2,
-  },
-  tooltipHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-    paddingBottom: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    justifyContent: 'center',
+    zIndex: 1000,
   },
-  tooltipCloseButton: {
-    padding: 2,
-    marginLeft: 4,
-  },
-  tooltipCloseText: {
-    color: '#9ca3af',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  tooltipDriversList: {
-    paddingVertical: 2,
-    flex: 1, // Allow it to take remaining space
-  },
-  tooltipDriverItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  renderingContent: {
     alignItems: 'center',
-    paddingVertical: 2,
-    paddingHorizontal: 4,
+    justifyContent: 'center',
+    padding: 20,
   },
-  tooltipDriverCode: {
-    fontSize: 11,
-    fontWeight: '600',
-    flex: 1,
-  },
-  tooltipPosition: {
+  renderingText: {
     color: '#fff',
-    fontSize: 11,
-    fontWeight: 'bold',
-    minWidth: 24,
-    textAlign: 'right',
-  },
-  tooltipText: {
-    color: '#f1f5f9',
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontSize: 16,
+    marginTop: 16,
+    marginBottom: 20,
     textAlign: 'center',
+  },
+  progressBar: {
+    width: 200,
+    height: 4,
+    backgroundColor: '#374151',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#ef4444',
+    borderRadius: 2,
   },
 });

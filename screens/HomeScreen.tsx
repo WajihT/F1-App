@@ -1,7 +1,8 @@
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
-import { commonStyles, colors } from '../styles/commonStyles';
+import { commonStyles, colors, typography } from '../styles/commonStyles';
 import Icon from '../components/Icon';
+import { newsStyle } from '../styles/newsStyle';
 import SeasonSelector from '../components/SeasonSelector';
 import { F1DataService, Driver, Constructor, Race } from '../services/f1DataService';
 import { Animated } from 'react-native';
@@ -9,6 +10,9 @@ import { useNavigation } from '@react-navigation/native';
 import TireIcon from "../assets/TireIcon"; 
 import { LinearGradient } from 'expo-linear-gradient';
 import { Linking } from 'react-native';
+import NewsService, { NewsItem } from '../lib/newsService';
+import { AnimatedCard } from '../components/ui/AnimatedCard';
+import { theme } from '../styles/theme';
 
 
 export default function HomeScreen() {
@@ -17,10 +21,13 @@ export default function HomeScreen() {
   const [constructorLeader, setConstructorLeader] = useState<Constructor | null>(null);
   const [nextRace, setNextRace] = useState<Race | null>(null);
   const [loading, setLoading] = useState(false);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [newsLoading, setNewsLoading] = useState(true);
 
   const f1Service = F1DataService.getInstance();
   const navigation = useNavigation();
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const newsService = NewsService.getInstance();
 
   useEffect(() => {
     loadHomeData();
@@ -53,6 +60,8 @@ export default function HomeScreen() {
       // Find next upcoming race
       const upcoming = races.find(race => race.status === 'upcoming');
       setNextRace(upcoming || null);
+
+      loadNews();
       
       console.log(`Loaded home data: ${drivers.length} drivers, ${constructors.length} constructors, ${races.length} races`);
     } catch (error) {
@@ -78,6 +87,22 @@ export default function HomeScreen() {
     } catch {
       return dateString;
     }
+  };
+
+    const loadNews = async () => {
+    setNewsLoading(true);
+    try {
+      const latestNews = await newsService.fetchLatestNews();
+      setNews(latestNews);
+    } catch (error) {
+      console.error('Error loading news:', error);
+    } finally {
+      setNewsLoading(false);
+    }
+  };
+
+  const handleNewsPress = async (newsItem: NewsItem) => {
+    await newsService.openNewsArticle(newsItem.url);
   };
 
   const getCountdown = (dateString: string) => {
@@ -182,13 +207,14 @@ const latestNews = [
 
     <Text
       style={{
-        fontWeight: 'bold',
-        fontSize: 24,
+        fontWeight: '500',
+        fontSize: 23,
         color: '#fff',
         letterSpacing: -1,
+        fontFamily: typography.fontFamily.bold,
       }}
     >
-      F1 <Text style={{ color: '#ef4444' }}>Analytics</Text>
+      F1 <Text style={{ color: '#ef4444', fontFamily: typography.fontFamily.semiBold }}>Analytics</Text>
     </Text>
   </TouchableOpacity>
 </View>
@@ -230,7 +256,7 @@ const latestNews = [
     fontWeight: '400',
     marginBottom: 16,
     textAlign: 'center',
-    fontFamily: 'Roboto_400Regular',
+    fontFamily: typography.fontFamily.regular,
   }}
 >
  Next Race
@@ -290,7 +316,7 @@ const latestNews = [
                   <Text style={[commonStyles.textSecondary, { textAlign: 'center' }]}>
                     Driver
                   </Text>
-                  <Text style={[commonStyles.title, { textAlign: 'center', fontSize: 18 }]}>
+                  <Text style={[commonStyles.title, { textAlign: 'center', fontSize: 17 }]}>
                     {driverLeader ? driverLeader.name : 'Loading...'}
                   </Text>
                   <Text style={[commonStyles.text, { textAlign: 'center', color: '#f59e0b' }]}>
@@ -310,7 +336,7 @@ const latestNews = [
                   <Text style={[commonStyles.textSecondary, { textAlign: 'center' }]}>
                     Constructor
                   </Text>
-                  <Text style={[commonStyles.title, { textAlign: 'center', fontSize: 18 }]}>
+                  <Text style={[commonStyles.title, { textAlign: 'center', fontSize: 17 }]}>
                     {constructorLeader ? constructorLeader.name : 'Loading...'}
                   </Text>
                   <Text style={[commonStyles.text, { textAlign: 'center', color: '#f59e0b' }]}>
@@ -321,27 +347,37 @@ const latestNews = [
             </View>
 
             {/* Latest News */}
-            <View style={commonStyles.section}>
-              <Text style={commonStyles.subtitle}>Latest News</Text>
-              {latestNews.map((news) => (
-                <TouchableOpacity key={news.id} style={commonStyles.card} onPress={() => Linking.openURL(news.url)}>
-                  <View style={commonStyles.row}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[commonStyles.text, { fontWeight: '600', marginBottom: 4 }]}>
-                        {news.title}
-                      </Text>
-                      <Text style={[commonStyles.textSecondary, { marginBottom: 8 }]}>
-                        {news.summary}
-                      </Text>
-                      <Text style={[commonStyles.textSecondary, { fontSize: 12 }]}>
-                        {news.time}
-                      </Text>
-                    </View>
-                    <Icon name="chevron-forward" size={20} style={{ color: colors.grey }} />
-                  </View>
-                </TouchableOpacity>
-              ))}
+            <AnimatedCard delay={69} style={{ backgroundColor: "#00000eff" }}>
+            <View style={newsStyle.newsSectionHeader}>
+              <Text style={newsStyle.sectionTitle}>Latest News</Text>
+              <TouchableOpacity style={newsStyle.viewAllButton}>
+                <Text style={newsStyle.viewAllText}>View All</Text>
+                <Icon name="chevron-forward" size={16} style={{ color: theme.colors.primary.main, marginLeft: 4 }} />
+              </TouchableOpacity>
             </View>
+            {news.map((item, index) => (
+              <TouchableOpacity
+                key={item.id}
+                style={[newsStyle.newsItem, index !== news.length - 1 && newsStyle.newsItemBorder]}
+                activeOpacity={0.7}
+                onPress={() => handleNewsPress(item)}
+              >
+                <View style={newsStyle.newsContent}>
+                  <View style={newsStyle.newsHeader}>
+                    <Text style={newsStyle.newsTitle}>{item.title}</Text>
+                    <View style={newsStyle.newsMetadata}>
+                      <Text style={newsStyle.newsTime}>{item.time}</Text>
+                      <Text style={newsStyle.newsSource}> • {item.source}</Text>
+                    </View>
+                  </View>
+                  <Text style={newsStyle.newsSummary}>{item.summary}</Text>
+                </View>
+                <View style={newsStyle.newsArrow}>
+                  <Icon name="open-outline" size={18} style={{ color: theme.colors.text.tertiary }} />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </AnimatedCard>
           </ScrollView>
         )}
       </View>

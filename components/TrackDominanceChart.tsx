@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, Dimensions, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, Dimensions, Modal } from 'react-native';
 import { VictoryChart, VictoryLine, VictoryAxis, VictoryContainer } from 'victory-native';
-import { commonStyles, colors } from '../styles/commonStyles';
+import { commonStyles, colors, typography } from '../styles/commonStyles';
 import { fetchSessionDrivers, fetchSpeedData } from '../lib/api';
 import { SessionDriver } from '../lib/types';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import LoadingSpinnerF1 from './LoadingSpinnerF1';
 
 interface SpeedDataPoint {
   Distance: number;
@@ -221,12 +222,12 @@ const TrackDominanceChart: React.FC<TrackDominanceChartProps> = ({
           <MaterialIcons name="people" size={24} color={colors.primary} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
+          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600', fontFamily: typography.fontFamily.bold }}>
             Select Drivers ({selectedDrivers.length}/{MAX_DRIVERS})
           </Text>
-          <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+          <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2, fontFamily: typography.fontFamily.regular }}>
             {selectedDrivers.length === 0
-              ? `Choose exactly ${MIN_DRIVERS} drivers to compare`
+              ? `Choose ${MIN_DRIVERS} drivers to compare`
               : selectedDrivers.length < MIN_DRIVERS
               ? selectedDrivers.join(' vs ') + ` (need ${MIN_DRIVERS - selectedDrivers.length} more)`
               : selectedDrivers.join(' vs ')
@@ -272,8 +273,8 @@ const TrackDominanceChart: React.FC<TrackDominanceChartProps> = ({
               <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#fff', marginBottom: 4 }}>
                 Select Drivers
               </Text>
-              <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
-                Choose exactly {MIN_DRIVERS} drivers to compare track dominance
+              <Text style={{ color: colors.textSecondary, fontSize: 14, fontFamily: typography.fontFamily.regular }}>
+                Choose {MIN_DRIVERS} drivers to compare track dominance
               </Text>
             </View>
             <TouchableOpacity 
@@ -665,17 +666,18 @@ const TrackDominanceChart: React.FC<TrackDominanceChartProps> = ({
         disabled={selectedDrivers.length !== MIN_DRIVERS || isLoadingDrivers}
       >
         <MaterialIcons name="speed" size={20} color="#fff" />
-        <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>Load Track Dominance</Text>
+        <Text style={{ color: '#fff', fontWeight: '500', fontSize: 14, fontFamily: typography.fontFamily.bold }}>Load Track Dominance</Text>
       </TouchableOpacity>
       <Text style={{ 
         color: colors.textSecondary, 
-        fontSize: 13, 
+        fontSize: 12, 
         marginTop: 12, 
         textAlign: 'center',
         lineHeight: 18,
-        paddingHorizontal: 20
+        paddingHorizontal: 20,
+        fontFamily: typography.fontFamily.regular
       }}>
-        Select exactly 2 drivers and click load to view track dominance comparison
+        Select 2 drivers and click load to view track dominance comparison
       </Text>
     </View>
   );
@@ -710,8 +712,8 @@ const TrackDominanceChart: React.FC<TrackDominanceChartProps> = ({
     if (isLoadingDrivers) {
       return (
         <View style={{ alignItems: 'center', padding: 40 }}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={{ color: colors.textSecondary, marginTop: 12 }}>Loading drivers...</Text>
+          <LoadingSpinnerF1 size={48} color={colors.primary} />
+          
         </View>
       );
     }
@@ -730,8 +732,8 @@ const TrackDominanceChart: React.FC<TrackDominanceChartProps> = ({
         <View>
           {renderDriverSelector()}
           <View style={{ alignItems: 'center', padding: 40 }}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={{ color: colors.textSecondary, marginTop: 12 }}>Loading track dominance...</Text>
+            <LoadingSpinnerF1 size={48} color={colors.primary} />
+            
           </View>
         </View>
       );
@@ -765,7 +767,7 @@ const TrackDominanceChart: React.FC<TrackDominanceChartProps> = ({
         <Text style={[commonStyles.title, { marginBottom: 4, textAlign: 'center' }]}>
           Track Dominance
         </Text>
-        <Text style={{ color: colors.textSecondary, fontSize: 14, textAlign: 'center', marginBottom: 16 }}>
+        <Text style={{ color: colors.textSecondary, fontSize: 13, textAlign: 'center', marginBottom: 16, fontFamily: typography.fontFamily.regular }}>
           by Lap with Speed Trace
         </Text>
         {renderContent()}

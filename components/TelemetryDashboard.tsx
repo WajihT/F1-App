@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { commonStyles } from '../styles/commonStyles';
+import { commonStyles, typography } from '../styles/commonStyles';
 import CircuitComparisonChart from './CircuitComparisonChart';
 import DRSChart from './DRSChart';
 import RPMChart from './RPMChart';
@@ -46,7 +46,7 @@ const TelemetryDashboard: React.FC<TelemetryDashboardProps> = ({
           alignItems: 'center',
         }}
       >
-        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
+        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600', fontFamily: typography.fontFamily.semiBold }}>
           Overview
         </Text>
       </TouchableOpacity>
@@ -63,7 +63,7 @@ const TelemetryDashboard: React.FC<TelemetryDashboardProps> = ({
           alignItems: 'center',
         }}
       >
-        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
+        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600', fontFamily: typography.fontFamily.semiBold }}>
           Detail
         </Text>
       </TouchableOpacity>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, Dimensions, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, Dimensions, Modal } from 'react-native';
 import { VictoryChart, VictoryArea, VictoryAxis, VictoryTheme } from 'victory-native';
-import { commonStyles, colors } from '../styles/commonStyles';
+import { commonStyles, colors, typography } from '../styles/commonStyles';
 import { fetchSessionDrivers, fetchDRSData } from '../lib/api';
 import { SessionDriver } from '../lib/types';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import LoadingSpinnerF1 from './LoadingSpinnerF1';
 
 interface DRSDataPoint {
   Distance: number;
@@ -343,15 +344,16 @@ const DRSChart: React.FC<DRSChartProps> = ({
         disabled={selectedDrivers.length !== MIN_DRIVERS || isLoadingDrivers}
       >
         <MaterialIcons name="speed" size={20} color="#fff" />
-        <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>Load DRS Chart</Text>
+        <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16, fontFamily: typography.fontFamily.semiBold }}>Load DRS Chart</Text>
       </TouchableOpacity>
       <Text style={{ 
         color: colors.textSecondary, 
-        fontSize: 13, 
+        fontSize: 11, 
         marginTop: 12, 
         textAlign: 'center',
         lineHeight: 18,
-        paddingHorizontal: 20
+        paddingHorizontal: 20,
+        fontFamily: typography.fontFamily.regular
       }}>
         Select a driver and click load to view DRS usage analysis
       </Text>
@@ -373,7 +375,7 @@ const DRSChart: React.FC<DRSChartProps> = ({
           alignItems: 'center',
           marginTop: 16,
         }}>
-          <ActivityIndicator size="large" color="#dc2626" />
+          <LoadingSpinnerF1 size={48} color="#dc2626" />
           <Text style={{ color: '#fff', fontSize: 16, marginTop: 12 }}>Loading...</Text>
         </View>
       );
@@ -533,10 +535,10 @@ const DRSChart: React.FC<DRSChartProps> = ({
               <MaterialIcons name="people" size={24} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
+              <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600', fontFamily: typography.fontFamily.semiBold }}>
                 {selectedDrivers.length === 0 ? 'Select Driver' : `${selectedDrivers[0]} Selected`}
               </Text>
-              <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2, fontFamily: typography.fontFamily.regular }}>
                 {selectedDrivers.length === 0
                   ? 'Choose a driver to analyze DRS usage'
                   : `Ready to analyze ${selectedDrivers[0]}'s DRS data`

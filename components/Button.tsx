@@ -1,4 +1,4 @@
-import { colors } from '../styles/commonStyles';
+import { commonStyles, colors, typography } from '../styles/commonStyles';
 import { Text, TouchableOpacity, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 
 interface ButtonProps {
@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontSize: 16,
     fontWeight: '600',
-    fontFamily: 'Roboto_600SemiBold',
+    fontFamily: typography.fontFamily.semiBold,
   },
 });
 
