@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://192.168.0.238:8000'; //Use this for prod: https://f1analytics-be-production.up.railway.app FastAPI backend URL 
+const API_BASE_URL = 'https://f1analytics-be-production.up.railway.app'; //Use this for prod: https://f1analytics-be-production.up.railway.app FastAPI backend URL 
 // Use this for dev: http://192.168.0.238:8000
 
 export async function fetchDriverStandings(year: number) {
